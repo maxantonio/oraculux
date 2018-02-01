@@ -1,2 +1,2 @@
-# oraculux
-Etherem blockchain basic statics
+#oraculux
+Ethereum blockchain basic statics
