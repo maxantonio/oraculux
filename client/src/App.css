@@ -1,28 +1,71 @@
-.App {
-  text-align: center;
+body {
+    min-width: 1910px;
 }
 
-.App-logo {
-  animation: App-logo-spin infinite 20s linear;
-  height: 80px;
+.box {
+    position: relative;
+    background-color: white;
+    padding: 10px;
+    border: 1px solid #7a7a7a;
+    width: 334px;
+    display: inline-block;
 }
 
-.App-header {
-  background-color: #222;
-  height: 150px;
-  padding: 20px;
-  color: white;
+.icon {
+    width: 80px;
+    padding: 2px;
+    text-align: center;
 }
 
-.App-title {
-  font-size: 1.5em;
+.info {
+    position: absolute;
+    left: 90px;
+    top: 11px;
+    padding-left: 2px;
 }
 
-.App-intro {
-  font-size: large;
+.info span {
+    display: block;
 }
 
-@keyframes App-logo-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.info span.title {
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 20px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #000000;
+}
+
+.info span.title span.small {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: #919191;
+    display: inline-block;
+}
+
+.info span.value {
+    display: block;
+    font-weight: 200;
+    font-size: 43px;
+    line-height: 48px;
+    letter-spacing: -3px;
+}
+
+.tc-blue {
+    color: #10a0de;
+}
+
+.tc-red {
+    color: #eb4b4b;
+}
+
+.tc-yellow {
+    color: #ffd75a;
+}
+
+.tc-orange {
+    color: #ff8812;
 }
