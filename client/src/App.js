@@ -1,6 +1,5 @@
 import React, {Component} from 'react';
 import './App.css';
-import io from 'socket.io-client';
 
 class App extends Component {
     constructor() {
@@ -8,29 +7,52 @@ class App extends Component {
 
         this.state = {
             last_block: 0,
-            best_block: 0
+            best_block: 0,
+            gas_price:0
         };
 
-        this.last_Block();
-        this.best_Block();
+         this.last_Block();
+        // this.best_Block();
 
-        // const socket = io('ws://192.168.0.108:6060/ws');
-        // socket.on('connect', (event) => {
-        //     console.log(event);
-        // });
-
-        // var ws = new WebSocket("ws://192.168.0.108:6060/ws");
-        // console.log('ws', ws)
+        var ws = new WebSocket("ws://" + document.location.host + "/ws");
+         console.log('ws', ws)
         // setTimeout(() => {
         //     ws.send('eth2');
         // }, 5000)
         //
-        // ws.onmessage = function(event) {
-        //     var theData = JSON.parse(event.data);
-        //     console.log("respondio el server", theData);
-        // }
-    }
+        var self = this;
+        ws.onmessage = function(event) {
+             var response = JSON.parse(event.data);
 
+            switch(response.info_type){
+                case "Syncing":
+                    self.setSyncing(response.data);
+                    break;
+                default:
+                    self.setStatus(response.data);
+                    break;
+            }
+            console.log("respondio el server el dato", response.data);
+        }
+    }
+    setSyncing(data){
+        console.log("ESCRIBIENDO CON SYNCING")
+        if(this.state.best_block !== data.CurrentBlock) {
+            this.setState({
+                best_block: data.CurrentBlock,
+                gas_price:data.HighestBlock,
+                last_block: 0
+            });
+        }
+    }
+    setStatus(data){
+        if(this.state.bes_block !== data.best) {
+            this.setState({
+                best_block: data.best,
+                last_block: 0
+            });
+        }
+    }
     best_Block() {
         setInterval(() => {
             this.setState({
@@ -134,7 +156,7 @@ class App extends Component {
                         <div>
                             <i className="fa fa-tag ml-2 tc-blue fa-flip-horizontal"></i>
                             <span className="title ml-3">gas price</span>
-                            <span className="pull-right tc-blue mr-2">30 gwei</span>
+                            <span className="pull-right tc-blue mr-2">{this.state.gas_price}</span>
                         </div>
                     </div>
                     <div className="box-small">

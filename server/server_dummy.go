@@ -6,8 +6,11 @@ import (
 	"time"
 	"strings"
 	"github.com/gorilla/websocket"
+	"github.com/onrik/ethrpc"
+	//"github.com/Pallinder/go-randomdata"
 	"github.com/Pallinder/go-randomdata"
 )
+var dummy = true
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 	ReadBufferSize:  1024,
@@ -22,12 +25,16 @@ type SendClass struct {
 	Transactions int `json:"transactions"`
 	Uncle_count int `json:"uncle_count"`
 }
+type SocketInfo struct {
+	Info_type string `json:"info_type"`
+	Data interface{} `json:"data"`
+}
 //para cuando un usuario se conecta
 type Client struct {
 	ws   *websocket.Conn
-	send chan SendClass
+	send chan SocketInfo
 	subs []string
-} 
+}
 type Emisora struct{
 	identificador string
 	clients int
@@ -49,28 +56,53 @@ func (em *Emisora) start() {
 			}
 		case <-invervalo:
 			temporal := em.GetFake()
-		 	
-		 	for cnn := range em.sockets {		
+
+		 	for cnn := range em.sockets {
 				cnn.send <- temporal
 			}
-			
+
 		}
 	}
-	
-}
 
+}
+func (s *Emisora) GetSyncing(rpc *ethrpc.EthRPC) SocketInfo {
+	result,error := rpc.EthSyncing()
+	var sock SocketInfo
+	if error != nil {
+		sock = SocketInfo{
+			Info_type:"Error",
+			Data:error,
+		}
+	}else{
+		sock = SocketInfo{
+			Info_type:"Syncing",
+			Data:result,
+		}
+	}
+	fmt.Println("fake generado")
+	fmt.Print(sock)
+	return sock
+}
 //Crea un nuevo objeto a mandar a las vista
-func (s *Emisora) GetFake() SendClass {
-    return SendClass{
+func (s *Emisora) GetFake() SocketInfo {
+	result := SendClass{
 		Identificador:s.identificador,
-    	Best_Block: 1 + randomdata.Number(1, 90),
-    	Uncles: 2 + randomdata.Number(1,70)/100,
-    	Transactions: randomdata.Number(1, 80),
-    	Uncle_count: 4 + randomdata.Number(1, 60)/100,
-    }
+		Best_Block: 1 + randomdata.Number(1, 90),
+		Uncles: 2 + randomdata.Number(1,70)/100,
+		Transactions: randomdata.Number(1, 80),
+		Uncle_count: 4 + randomdata.Number(1, 60)/100,
+	}
+	sock := SocketInfo{
+		Info_type:"Sendclass",
+		Data:result,
+	}
+	fmt.Println("fake generado")
+	fmt.Print(sock)
+    return sock
 }
 
-var FirstValues = map[string]Emisora{  
+
+var FirstValues = map[string]Emisora{
 	"eth1": { "eth1",  0,  make(map[*Client]bool), make(chan *Client), make(chan *Client)},
 	"eth2": { "eth2", 0,  make(map[*Client]bool), make(chan *Client), make(chan *Client)},
 	"eth3": { "eth3",  0,  make(map[*Client]bool), make(chan *Client), make(chan *Client)},
@@ -110,14 +142,29 @@ func (c *Client) write() {
 	defer func() {
 		c.ws.Close()
 	}()
-
+	ticker := time.NewTicker(5 * time.Second)
+	emisora := FirstValues["eth1"]
+	fmt.Println("iniciado write")
+	ethclient := ethrpc.New("http://127.0.0.1:8545")
 	for {
 		select {
-		case message, ok := <-c.send:
-			if !ok {
-				c.ws.WriteMessage(websocket.CloseMessage, []byte{})
-				return
+		case <-ticker.C:
+			fmt.Println("Generando facke")
+			if(dummy) {
+				go func() { c.send <- emisora.GetFake() }()
+				fmt.Println("Fake pedido")
+			}else {
+				go func() { c.send <- emisora.GetSyncing(ethclient) }()
+				fmt.Println("Info  pedido")
 			}
+
+		case message := <-c.send:
+			fmt.Println("Escribiendo mensaje")
+			fmt.Println(message)
+			//if !ok {
+			//	c.ws.WriteMessage(websocket.CloseMessage, []byte{})
+			//	return
+			//}
 			c.ws.WriteJSON(message)
 
 		}
@@ -125,6 +172,7 @@ func (c *Client) write() {
 }
 
 func (c *Client) read() {
+
 	defer func() {
 		hub.removeClient <- c
 		c.ws.Close()
@@ -154,32 +202,51 @@ func (c *Client) read() {
 	}
 }
 
-func wsIndex(res http.ResponseWriter, req *http.Request) {
+func wsIndex(res http.ResponseWriter, req *http.Request){
 	conn, _ := upgrader.Upgrade(res, req, nil)
 
 	client := &Client{
 		ws:   conn,
-		send: make(chan SendClass),
+		send: make(chan SocketInfo),
 		subs: []string{},
 	}
 
 	hub.addClient <- client
-
+	fmt.Println("cliente recibido")
 	go client.write()
 	go client.read()
 }
-
+func serveHome(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("manejado por serveHome")
+	fmt.Println(r.URL.Path)
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", 405)
+		return
+	}
+	//if r.URL.Path == "/" {
+	//	fmt.Println("retorna html index")
+	//	http.ServeFile(w, r, "../client/build/index.html")
+	//	return
+	//}else{
+		urlfile := "../client/build"+r.URL.Path
+		fmt.Println("retorna fichero",urlfile)
+		http.ServeFile(w, r, urlfile)
+	//	return
+	//}
+	//http.ServeFile(w, r, "../client/build/index.html")
+}
 func main() {
 	go hub.start()
-	for v  := range FirstValues{
-		w := FirstValues[v]
-		go w.start()
-	}
+	//for v  := range FirstValues{
+	//	w := FirstValues[v]
+	//	go w.start()
+	//}
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request){
+		serveHome(w,r)
+	})
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request){
 		wsIndex(w, r)
 	})
-	http.ListenAndServe(":6060",nil)
-	
-		
+	http.ListenAndServe(":80",nil)
 }
 
