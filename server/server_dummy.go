@@ -75,13 +75,15 @@ func (s *Emisora) GetSyncing(rpc *ethrpc.EthRPC,c *Client) SocketInfo {
 		}
 	}else{
 		sock = SocketInfo{
-			Info_type:"Uncles",
+			Info_type:"Syncing",
 			Data:result,
 		}
 	}
-	fmt.Println("fake generado")
+
 	fmt.Print(sock)
+	fmt.Println("sinck pidioendo uncles")
 	go func() { c.send <- s.GetUncles(rpc,result.CurrentBlock) }()
+	fmt.Println("sinck terminado")
 	return sock
 }
 func (s *Emisora) GetUncles(rpc *ethrpc.EthRPC,currentBlock int) SocketInfo {
@@ -94,7 +96,7 @@ func (s *Emisora) GetUncles(rpc *ethrpc.EthRPC,currentBlock int) SocketInfo {
 		}
 	}else{
 		sock = SocketInfo{
-			Info_type:"Syncing",
+			Info_type:"Uncles",
 			Data:result,
 		}
 	}
@@ -114,7 +116,7 @@ func (s *Emisora) EthGasPrice(rpc *ethrpc.EthRPC) SocketInfo {
 	}else{
 		sock = SocketInfo{
 			Info_type:"GasPrice",
-			Data:result,
+			Data:result.String(),
 		}
 	}
 	fmt.Println("fake generado")
@@ -207,16 +209,15 @@ func (c *Client) write() {
 		select {
 		case <-ticker.C:
 			fmt.Println("Generando facke")
-			if(dummy) {
+			if (dummy) {
 				go func() { c.send <- emisora.GetFake() }()
 				fmt.Println("Fake pedido")
-			}else {
-				go func() { c.send <- emisora.GetSyncing(ethclient,c) }()
+			} else {
+				go func() { c.send <- emisora.GetSyncing(ethclient, c) }()
 				go func() { c.send <- emisora.GetPeers(ethclient) }()
 				go func() { c.send <- emisora.EthGasPrice(ethclient) }()
 				fmt.Println("Info  pedido")
 			}
-
 		case message := <-c.send:
 			fmt.Println("Escribiendo mensaje")
 			fmt.Println(message)

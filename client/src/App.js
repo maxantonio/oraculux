@@ -9,6 +9,7 @@ class App extends Component {
             last_block: 0,
             best_block: 0,
             gas_price:0,
+            uncles:0,
             peers:0
         };
 
@@ -29,24 +30,14 @@ class App extends Component {
                 case "Syncing":
                     self.setSyncing(response.data);
                     break;
-                case "Peers":
-                    self.setPeers(response.data);
-                    break;
-                default:
-                    self.setStatus(response.data);
+                 default:
+                    self.setStatus(response.info_type,response.data);
                     break;
             }
-            console.log("respondio el server el dato", response.data);
+            console.log("respondio el server el dato de "+response.info_type, response.data);
         }
     }
-    setPeers(data){
-        console.log("ESCRIBIENDO CON Peers")
-        this.setState({
-            peers: data
-        });
 
-
-    }
     setSyncing(data){
         console.log("ESCRIBIENDO CON SYNCING")
         if(this.state.best_block !== data.CurrentBlock) {
@@ -57,12 +48,17 @@ class App extends Component {
             });
         }
     }
-    setStatus(data){
-        if(this.state.bes_block !== data.best) {
-            this.setState({
-                best_block: data.best,
-                last_block: 0
-            });
+    setStatus(type,data){
+        switch(type){
+            case "Uncles":
+                this.setState({ uncles:data});
+                break;
+            case "GasPrice":
+                this.setState({ gas_price:data});
+                break;
+            case "Peers":
+                this.setState({ peers:data});
+                break;
         }
     }
     best_Block() {
