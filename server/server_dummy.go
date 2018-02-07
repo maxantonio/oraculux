@@ -65,8 +65,27 @@ func (em *Emisora) start() {
 	}
 
 }
-func (s *Emisora) GetSyncing(rpc *ethrpc.EthRPC) SocketInfo {
+func (s *Emisora) GetSyncing(rpc *ethrpc.EthRPC,c *Client) SocketInfo {
 	result,error := rpc.EthSyncing()
+	var sock SocketInfo
+	if error != nil {
+		sock = SocketInfo{
+			Info_type:"Error",
+			Data:error,
+		}
+	}else{
+		sock = SocketInfo{
+			Info_type:"Uncles",
+			Data:result,
+		}
+	}
+	fmt.Println("fake generado")
+	fmt.Print(sock)
+	go func() { c.send <- s.GetUncles(rpc,result.CurrentBlock) }()
+	return sock
+}
+func (s *Emisora) GetUncles(rpc *ethrpc.EthRPC,currentBlock int) SocketInfo {
+	result,error := rpc.EthGetUncleCountByBlockNumber(currentBlock)
 	var sock SocketInfo
 	if error != nil {
 		sock = SocketInfo{
@@ -83,6 +102,26 @@ func (s *Emisora) GetSyncing(rpc *ethrpc.EthRPC) SocketInfo {
 	fmt.Print(sock)
 	return sock
 }
+
+func (s *Emisora) EthGasPrice(rpc *ethrpc.EthRPC) SocketInfo {
+	result,error := rpc.EthGasPrice()
+	var sock SocketInfo
+	if error != nil {
+		sock = SocketInfo{
+			Info_type:"Error",
+			Data:error,
+		}
+	}else{
+		sock = SocketInfo{
+			Info_type:"GasPrice",
+			Data:result,
+		}
+	}
+	fmt.Println("fake generado")
+	fmt.Print(sock)
+	return sock
+}
+
 func (s *Emisora) GetPeers(rpc *ethrpc.EthRPC) SocketInfo {
 	result,error := rpc.NetPeerCount()
 	var sock SocketInfo
@@ -172,8 +211,9 @@ func (c *Client) write() {
 				go func() { c.send <- emisora.GetFake() }()
 				fmt.Println("Fake pedido")
 			}else {
-				go func() { c.send <- emisora.GetSyncing(ethclient) }()
+				go func() { c.send <- emisora.GetSyncing(ethclient,c) }()
 				go func() { c.send <- emisora.GetPeers(ethclient) }()
+				go func() { c.send <- emisora.EthGasPrice(ethclient) }()
 				fmt.Println("Info  pedido")
 			}
 
@@ -262,6 +302,6 @@ func main() {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request){
 		wsIndex(w, r)
 	})
-	http.ListenAndServe(":8080",nil)
+	http.ListenAndServe(":80",nil)
 }
 
