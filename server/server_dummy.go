@@ -10,7 +10,7 @@ import (
 	//"github.com/Pallinder/go-randomdata"
 	"github.com/Pallinder/go-randomdata"
 )
-var dummy = true
+var dummy = false
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 	ReadBufferSize:  1024,
@@ -76,6 +76,24 @@ func (s *Emisora) GetSyncing(rpc *ethrpc.EthRPC) SocketInfo {
 	}else{
 		sock = SocketInfo{
 			Info_type:"Syncing",
+			Data:result,
+		}
+	}
+	fmt.Println("fake generado")
+	fmt.Print(sock)
+	return sock
+}
+func (s *Emisora) GetPeers(rpc *ethrpc.EthRPC) SocketInfo {
+	result,error := rpc.NetPeerCount()
+	var sock SocketInfo
+	if error != nil {
+		sock = SocketInfo{
+			Info_type:"Error",
+			Data:error,
+		}
+	}else{
+		sock = SocketInfo{
+			Info_type:"Peers",
 			Data:result,
 		}
 	}
@@ -155,18 +173,14 @@ func (c *Client) write() {
 				fmt.Println("Fake pedido")
 			}else {
 				go func() { c.send <- emisora.GetSyncing(ethclient) }()
+				go func() { c.send <- emisora.GetPeers(ethclient) }()
 				fmt.Println("Info  pedido")
 			}
 
 		case message := <-c.send:
 			fmt.Println("Escribiendo mensaje")
 			fmt.Println(message)
-			//if !ok {
-			//	c.ws.WriteMessage(websocket.CloseMessage, []byte{})
-			//	return
-			//}
 			c.ws.WriteJSON(message)
-
 		}
 	}
 }
@@ -241,12 +255,13 @@ func main() {
 	//	w := FirstValues[v]
 	//	go w.start()
 	//}
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request){
 		serveHome(w,r)
 	})
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request){
 		wsIndex(w, r)
 	})
-	http.ListenAndServe(":80",nil)
+	http.ListenAndServe(":8080",nil)
 }
 

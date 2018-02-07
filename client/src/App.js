@@ -8,7 +8,8 @@ class App extends Component {
         this.state = {
             last_block: 0,
             best_block: 0,
-            gas_price:0
+            gas_price:0,
+            peers:0
         };
 
          this.last_Block();
@@ -28,12 +29,23 @@ class App extends Component {
                 case "Syncing":
                     self.setSyncing(response.data);
                     break;
+                case "Peers":
+                    self.setPeers(response.data);
+                    break;
                 default:
                     self.setStatus(response.data);
                     break;
             }
             console.log("respondio el server el dato", response.data);
         }
+    }
+    setPeers(data){
+        console.log("ESCRIBIENDO CON Peers")
+        this.setState({
+            peers: data
+        });
+
+
     }
     setSyncing(data){
         console.log("ESCRIBIENDO CON SYNCING")
@@ -148,8 +160,8 @@ class App extends Component {
                     <div className="box-small">
                         <div>
                             <i className="fa fa-laptop ml-2 tc-green"></i>
-                            <span className="title ml-3">active nodes</span>
-                            <span className="pull-right tc-green mr-2">41/43</span>
+                            <span className="title ml-3">Peers</span>
+                            <span className="pull-right tc-green mr-2">{this.state.peers}</span>
                         </div>
                     </div>
                     <div className="box-small">
