@@ -75,11 +75,7 @@ class App extends Component {
 
     last_Block() {
         setInterval(() => {
-            if (this.state.last_block === 45)
-                this.setState({
-                    last_block: 0
-                });
-            this.setState({
+           this.setState({
                 last_block: this.state.last_block + 1
             });
         }, 1000);
