@@ -65,6 +65,7 @@ func (em *Emisora) start() {
 	}
 
 }
+
 func (s *Emisora) GetSyncing(rpc *ethrpc.EthRPC,c *Client) SocketInfo {
 	result,error := rpc.EthSyncing()
 	var sock SocketInfo
@@ -83,9 +84,49 @@ func (s *Emisora) GetSyncing(rpc *ethrpc.EthRPC,c *Client) SocketInfo {
 	fmt.Print(sock)
 	fmt.Println("sinck pidioendo uncles")
 	go func() { c.send <- s.GetUncles(rpc,result.CurrentBlock) }()
+	go func() { c.send <- s.GetTransactionCount(rpc,result.CurrentBlock) }()
+
 	fmt.Println("sinck terminado")
 	return sock
 }
+
+func (s *Emisora) GetEthHashrate(rpc *ethrpc.EthRPC) SocketInfo {
+	result,error := rpc.EthHashrate()
+	var sock SocketInfo
+	if error != nil {
+		sock = SocketInfo{
+			Info_type:"Error",
+			Data:error,
+		}
+	}else{
+		sock = SocketInfo{
+			Info_type:"Hashrate",
+			Data:result,
+		}
+	}
+	fmt.Println("fake generado")
+	fmt.Print(sock)
+	return sock
+}
+func (s *Emisora) GetTransactionCount(rpc *ethrpc.EthRPC,currentBlock int) SocketInfo {
+	result,error := rpc.EthGetBlockTransactionCountByNumber(currentBlock)
+	var sock SocketInfo
+	if error != nil {
+		sock = SocketInfo{
+			Info_type:"Error",
+			Data:error,
+		}
+	}else{
+		sock = SocketInfo{
+			Info_type:"Transactions",
+			Data:result,
+		}
+	}
+	fmt.Println("fake generado")
+	fmt.Print(sock)
+	return sock
+}
+
 func (s *Emisora) GetUncles(rpc *ethrpc.EthRPC,currentBlock int) SocketInfo {
 	result,error := rpc.EthGetUncleCountByBlockNumber(currentBlock)
 	var sock SocketInfo
@@ -161,6 +202,7 @@ func (s *Emisora) GetFake() SocketInfo {
 }
 
 
+
 var FirstValues = map[string]Emisora{
 	"eth1": { "eth1",  0,  make(map[*Client]bool), make(chan *Client), make(chan *Client)},
 	"eth2": { "eth2", 0,  make(map[*Client]bool), make(chan *Client), make(chan *Client)},
@@ -213,6 +255,7 @@ func (c *Client) write() {
 				go func() { c.send <- emisora.GetFake() }()
 				fmt.Println("Fake pedido")
 			} else {
+				go func() { c.send <- emisora.GetEthHashrate(ethclient) }()
 				go func() { c.send <- emisora.GetSyncing(ethclient, c) }()
 				go func() { c.send <- emisora.GetPeers(ethclient) }()
 				go func() { c.send <- emisora.EthGasPrice(ethclient) }()

@@ -4,12 +4,13 @@ import './App.css';
 class App extends Component {
     constructor() {
         super();
-
+        this.transactions = 0;
         this.state = {
             last_block: 0,
             best_block: 0,
             gas_price:0,
             uncles:0,
+            hash_rate:0,
             peers:0
         };
 
@@ -59,7 +60,19 @@ class App extends Component {
             case "Peers":
                 this.setState({ peers:data});
                 break;
+            case "Hashrate":
+                this.setState({ hash_rate:data});
+                break;
+            case "Transactions":
+                this.addTransactions(data);
+                break;
+            default:
+                console.log(type+" no esta definido todavia",data)
         }
+    }
+    addTransactions(count){
+        //AQUI ES NECESARIO
+        this.transactions = count;
     }
     best_Block() {
         setInterval(() => {
@@ -105,8 +118,8 @@ class App extends Component {
                             <div className="pull-left icon tc-blue"><i className="fa fa-code-fork fa-4x"></i></div>
                             <div className="info">
                                 <span className="title">uncles &nbsp;
-                                    <span className="small">(current / last 50)</span></span>
-                                <span className="value tc-blue">0/7</span>
+                                    <span className="small">(current block / last 50)</span></span>
+                                <span className="value tc-blue">{this.state.uncles}</span>
                             </div>
                         </div>
                     </div>
@@ -133,8 +146,8 @@ class App extends Component {
                         <div>
                             <div className="pull-left icon tc-orange"><i className="fa fa-fire fa-4x"></i></div>
                             <div className="info">
-                                <span className="title">avg network hashrate</span>
-                                <span className="value tc-orange">174 TH/s</span>
+                                <span className="title">network hashrate</span>
+                                <span className="value tc-orange">{this.state.hash_rate} TH/s</span>
                             </div>
                         </div>
                     </div>
@@ -185,6 +198,18 @@ class App extends Component {
                         </div>
                     </div>
                     <div className="box-small">
+                    </div>
+                </div>
+                <div className="row">
+                    <div className="box">
+                        <div>
+                            <div className="pull-left icon tc-red">
+                                <i className={"fa fa-hourglass-o fa-4x "}></i></div>
+                            <div className="info">
+                                <span className="title">Transactions</span>
+                                <span className="value">{this.transactions}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
