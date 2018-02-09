@@ -243,7 +243,7 @@ func (c *Client) write() {
 	defer func() {
 		c.ws.Close()
 	}()
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(time.Second)
 	emisora := FirstValues["eth1"]
 	fmt.Println("iniciado write")
 	ethclient := ethrpc.New("http://127.0.0.1:8545")
