@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import { LineChart, Line } from 'recharts';
 import './App.css';
 
 class App extends Component {
@@ -8,6 +9,7 @@ class App extends Component {
         this.state = {
             last_block: 0,
             best_block: 0,
+            lastknow_block:0,
             gas_price:0,
             uncles:0,
             hash_rate:0,
@@ -44,7 +46,7 @@ class App extends Component {
         if(this.state.best_block !== data.CurrentBlock) {
             this.setState({
                 best_block: data.CurrentBlock,
-                gas_price:data.HighestBlock,
+                lastknow_block:data.HighestBlock,
                 last_block: 0
             });
         }
@@ -108,7 +110,7 @@ class App extends Component {
                         <div>
                             <div className="pull-left icon tc-blue"><i className="fa fa-codepen fa-4x"></i></div>
                             <div className="info">
-                                <span className="title">best block</span>
+                                <span className="title">best block <span className="small">(last block:#{this.numberWithCommas(this.state.lastknow_block)} )</span></span>
                                 <span className="value tc-blue">#{this.numberWithCommas(this.state.best_block)}</span>
                             </div>
                         </div>
