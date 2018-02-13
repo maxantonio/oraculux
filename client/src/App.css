@@ -19,6 +19,10 @@ body {
     padding: 2px;
     text-align: center;
 }
+.charts{
+    width:200px;
+    height: 70px;
+}
 
 .info {
     position: absolute;
@@ -38,7 +42,13 @@ body {
     line-height: 20px;
     color: #000000;
 }
-
+span.title2 {
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 20px;
+    color: #000000;
+}
 .info span.title span.small {
     font-size: 10px;
     font-weight: 600;

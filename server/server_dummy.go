@@ -28,6 +28,7 @@ type SendClass struct {
 type SocketInfo struct {
 	Info_type string `json:"info_type"`
 	Data interface{} `json:"data"`
+	Block int `json:"block"`
 }
 //para cuando un usuario se conecta
 type Client struct {
@@ -79,12 +80,13 @@ func (s *Emisora) GetSyncing(rpc *ethrpc.EthRPC,c *Client) SocketInfo {
 			Info_type:"Syncing",
 			Data:result,
 		}
+		fmt.Print(sock)
+		fmt.Println("sinck pidioendo uncles")
+		go func() { c.send <- s.GetUncles(rpc,result.CurrentBlock) }()
+		go func() { c.send <- s.GetTransactionCount(rpc,result.CurrentBlock) }()
 	}
 
-	fmt.Print(sock)
-	fmt.Println("sinck pidioendo uncles")
-	go func() { c.send <- s.GetUncles(rpc,result.CurrentBlock) }()
-	go func() { c.send <- s.GetTransactionCount(rpc,result.CurrentBlock) }()
+
 
 	fmt.Println("sinck terminado")
 	return sock
@@ -120,6 +122,7 @@ func (s *Emisora) GetTransactionCount(rpc *ethrpc.EthRPC,currentBlock int) Socke
 		sock = SocketInfo{
 			Info_type:"Transactions",
 			Data:result,
+			Block:currentBlock,
 		}
 	}
 	fmt.Println("fake generado")
@@ -139,6 +142,7 @@ func (s *Emisora) GetUncles(rpc *ethrpc.EthRPC,currentBlock int) SocketInfo {
 		sock = SocketInfo{
 			Info_type:"Uncles",
 			Data:result,
+			Block:currentBlock,
 		}
 	}
 	fmt.Println("fake generado")
@@ -346,6 +350,6 @@ func main() {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request){
 		wsIndex(w, r)
 	})
-	http.ListenAndServe(":80",nil)
+	http.ListenAndServe(":6060",nil)
 }
 

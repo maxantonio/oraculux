@@ -1,25 +1,41 @@
 import React, {Component} from 'react';
-import { LineChart, Line } from 'recharts';
+import { BarChart,Bar } from 'recharts';
 import './App.css';
 
 class App extends Component {
+
     constructor() {
         super();
-        this.transactions = 0;
+        this.uncles = [{block:0,cont:4,fill:"#ccc"}]
+        this.transactions = [
+            {block: 0, uv: 4, fill: "#8884d8"},
+            {block: 0, uv: 3, fill: "#cc3f2c"},
+            {block: 0, uv: 5, fill: "#8884d8"},
+            {block: 0, uv: 2, fill: "#8884d8"},
+            {block: 0, uv: 5, fill: "#8884d8"},
+            {block: 0, uv: 1, fill: "#8884d8"},
+            {block: 0, uv: 1, fill: "#8884d8"},
+            {block: 0, uv: 1, fill: "#8884d8"},
+            {block: 0, uv: 1, fill: "#8884d8"},
+            {block: 0, uv: 1, fill: "#8884d8"},
+        ];
         this.state = {
+            transactions:[{block: 0, uv: 11, fill: "#8884d8"}],
             last_block: 0,
             best_block: 0,
             lastknow_block:0,
             gas_price:0,
-            uncles:0,
+            uncles:[{block:0,cont:0,fill:"#ccc"}],
+            uncle_val:0,
+            uncle_50:0,
             hash_rate:0,
             peers:0
         };
 
          this.last_Block();
         // this.best_Block();
-
-        var ws = new WebSocket("ws://" + document.location.host + "/ws");
+//" + document.location.host + "
+        var ws = new WebSocket("ws://localhost:6060/ws");
          console.log('ws', ws)
         // setTimeout(() => {
         //     ws.send('eth2');
@@ -27,17 +43,15 @@ class App extends Component {
         //
         var self = this;
         ws.onmessage = function(event) {
-             var response = JSON.parse(event.data);
-
+            var response = JSON.parse(event.data);
             switch(response.info_type){
                 case "Syncing":
                     self.setSyncing(response.data);
                     break;
                  default:
-                    self.setStatus(response.info_type,response.data);
+                    self.setStatus(response.info_type,response.data,response.block);
                     break;
             }
-            console.log("respondio el server el dato de "+response.info_type, response.data);
         }
     }
 
@@ -51,10 +65,10 @@ class App extends Component {
             });
         }
     }
-    setStatus(type,data){
+    setStatus(type,data,block){
         switch(type){
             case "Uncles":
-                this.setState({ uncles:data});
+               this.addUncle(data,block);
                 break;
             case "GasPrice":
                 this.setState({ gas_price:data});
@@ -66,15 +80,55 @@ class App extends Component {
                 this.setState({ hash_rate:data});
                 break;
             case "Transactions":
-                this.addTransactions(data);
+                this.addTransactions(data,block);
                 break;
             default:
                 console.log(type+" no esta definido todavia",data)
         }
     }
-    addTransactions(count){
+    getTransFill(count){
+        if(count<5) {
+            return "#8884d8"
+        }else if(count>5&&count<10){
+            return "#0084cc"
+        }else{
+            return "#008400"
+        }
+    }
+
+    addUncle(count,block){
+
+        if(this.uncles.length===0||block!==this.uncles[this.uncles.length-1].block) {
+            var nuevo = {block: block, cont: count, fill: this.getTransFill(count)}
+            this.uncles.push(nuevo);
+            if(this.uncles.length>50)
+                this.uncles.shift();
+            var temp = [];
+            for (var j = 0; j < this.uncles.length; j++) {
+                temp.push(this.uncles[j]);
+            }
+            var result = 0
+            for(var i in temp) {
+                console.log(i);
+                result += temp[i].cont;
+            }
+            console.log("RESULT DEL REDUXE",result);
+            this.setState({ uncles:temp,uncle_50:result,uncle_val:nuevo.cont});
+        }
+    }
+    addTransactions(count,block){
         //AQUI ES NECESARIO
-        this.transactions = count;
+        if(block!==this.transactions[this.transactions.length-1].block) {
+            var trans = [];
+            for (var j = 1; j < this.transactions.length; j++) {
+                trans.push(this.transactions[j]);
+            }
+            var nuevo = {block: block, uv: count, fill: this.getTransFill(count)}
+            trans.push(nuevo);
+            this.transactions = trans
+            this.setState({transactions: trans});
+        }
+        // this.transactions = count;
     }
     best_Block() {
         setInterval(() => {
@@ -83,7 +137,6 @@ class App extends Component {
             });
         }, 5000);
     }
-
     last_Block() {
         setInterval(() => {
            this.setState({
@@ -95,15 +148,15 @@ class App extends Component {
     numberWithCommas = (x) => {
         return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
-
-
     render() {
         const last_block = ((this.state.last_block <= 12) ? 'tc-green' : '') +
             ((this.state.last_block >= 13 && this.state.last_block <= 19) ? 'tc-yellow' : '') +
             ((this.state.last_block >= 20 && this.state.last_block <= 29) ? 'tc-orange' : '') +
             ((this.state.last_block >= 30) ? 'tc-red' : '');
 
+
         return (
+
             <div className="container-fluid">
                 <div className="row">
                     <div className="box">
@@ -121,7 +174,7 @@ class App extends Component {
                             <div className="info">
                                 <span className="title">uncles &nbsp;
                                     <span className="small">(current block / last 50)</span></span>
-                                <span className="value tc-blue">{this.state.uncles}</span>
+                                <span className="value tc-blue">{this.state.uncle_val}/{this.state.uncle_50}</span>
                             </div>
                         </div>
                     </div>
@@ -203,17 +256,21 @@ class App extends Component {
                     </div>
                 </div>
                 <div className="row">
+
                     <div className="box">
-                        <div>
-                            <div className="pull-left icon tc-red">
-                                <i className={"fa fa-hourglass-o fa-4x "}></i></div>
-                            <div className="info">
-                                <span className="title">Transactions</span>
-                                <span className="value">{this.transactions}</span>
-                            </div>
-                        </div>
+                        <span className="title2">Transactions</span>
+                        <BarChart width={280} height={80} data={this.state.transactions} bind>
+                            <Bar dataKey='uv' fillKey='fill'/>
+                        </BarChart>
+                    </div>
+                    <div className="box">
+                        <span className="title2">Uncles</span>
+                        <BarChart width={280} height={80} data={this.state.uncles} bind>
+                            <Bar dataKey='cont' fillKey='fill'/>
+                        </BarChart>
                     </div>
                 </div>
+
             </div>
         );
     }
