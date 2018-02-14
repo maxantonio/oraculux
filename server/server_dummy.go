@@ -350,6 +350,6 @@ func main() {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request){
 		wsIndex(w, r)
 	})
-	http.ListenAndServe(":6060",nil)
+	http.ListenAndServe(":80",nil)
 }
 
