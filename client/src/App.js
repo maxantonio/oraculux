@@ -76,6 +76,7 @@ class App extends Component {
         switch(type){
             case "FullBlock":
                 this.setBlock(data)
+                break;
             case "Uncles":
                this.addUncle(data,block);
                 break;
