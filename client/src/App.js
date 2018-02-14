@@ -35,7 +35,7 @@ class App extends Component {
          this.last_Block();
         // this.best_Block();
 //" + document.location.host + "
-        var ws = new WebSocket("ws://localhost:6060/ws");
+        var ws = new WebSocket("ws://" + document.location.host + "/ws");
          console.log('ws', ws)
         // setTimeout(() => {
         //     ws.send('eth2');
@@ -120,7 +120,9 @@ class App extends Component {
         //AQUI ES NECESARIO
         if(block!==this.transactions[this.transactions.length-1].block) {
             var trans = [];
-            for (var j = 1; j < this.transactions.length; j++) {
+            if(this.transactions.length>40)
+                this.transactions.shift();
+            for (var j = 0; j < this.transactions.length; j++) {
                 trans.push(this.transactions[j]);
             }
             var nuevo = {block: block, uv: count, fill: this.getTransFill(count)}
