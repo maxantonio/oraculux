@@ -54,7 +54,14 @@ class App extends Component {
             }
         }
     }
-
+    setBlock(data){
+        if(this.state.best_block !== data) {
+            this.setState({
+                best_block: data,
+                last_block: 0
+            });
+        }
+    }
     setSyncing(data){
         console.log("ESCRIBIENDO CON SYNCING")
         if(this.state.best_block !== data.CurrentBlock) {
@@ -67,6 +74,8 @@ class App extends Component {
     }
     setStatus(type,data,block){
         switch(type){
+            case "FullBlock":
+                this.setBlock(data)
             case "Uncles":
                this.addUncle(data,block);
                 break;

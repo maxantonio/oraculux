@@ -76,6 +76,22 @@ func (s *Emisora) GetSyncing(rpc *ethrpc.EthRPC,c *Client) SocketInfo {
 			Data:error,
 		}
 	}else{
+		if result.CurrentBlock==0{
+			number,err2 := rpc.EthBlockNumber()
+			if err2 !=nil {
+				sock = SocketInfo{
+					Info_type:"Error",
+					Data:error,
+				}
+			}
+			sock = SocketInfo{
+				Info_type:"FullBlock",
+				Data:number,
+			}
+			go func() { c.send <- s.GetUncles(rpc,number) }()
+			go func() { c.send <- s.GetTransactionCount(rpc,number) }()
+			return sock
+		}
 		sock = SocketInfo{
 			Info_type:"Syncing",
 			Data:result,
