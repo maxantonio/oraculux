@@ -23,7 +23,7 @@ class App extends Component {
         this.state = {
             transactions:this.transactions,
             last_block: 0,
-            times:[{name:0,time:0,fill:"#ccc"}],
+            times:[{name:0,cont:0,fill:"#ccc"}],
             avgtime:15,
             best_block: 0,
             lastknow_block:0,
