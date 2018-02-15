@@ -39,7 +39,6 @@ class App extends Component {
         // this.best_Block();
 //" + document.location.host + "
         var ws = new WebSocket("ws://" + document.location.host + "/ws");
-         console.log('ws', ws)
         // setTimeout(() => {
         //     ws.send('eth2');
         // }, 5000)
@@ -67,7 +66,6 @@ class App extends Component {
         }
     }
     setSyncing(data){
-        console.log("ESCRIBIENDO CON SYNCING")
         if(this.state.best_block !== data.CurrentBlock) {
             this.addTime(this.state.last_block,data.CurrentBlock);
             this.setState({
@@ -141,8 +139,7 @@ class App extends Component {
             });
     }
     addUncle(count,block){
-
-        if(this.uncles.length===0||block!==this.uncles[this.uncles.length-1].block) {
+        if(this.uncles.length===0||block!==this.uncles[this.uncles.length-1].name) {
             var nuevo = {name: block, cont: count, fill: this.getTransFill(count)}
             this.uncles.push(nuevo);
             if(this.uncles.length>50)
@@ -162,7 +159,8 @@ class App extends Component {
     }
     addTransactions(count,block){
         //AQUI ES NECESARIO
-        if(block!==this.transactions[this.transactions.length-1].block) {
+        if(block!==this.transactions[this.transactions.length-1].name) {
+            console.log(block," > ",this.transactions[this.transactions.length-1].name)
             var trans = [];
             if(this.transactions.length>40)
                 this.transactions.shift();
