@@ -36,13 +36,7 @@ class App extends Component {
         };
 
          this.last_Block();
-        // this.best_Block();
-//" + document.location.host + "
         var ws = new WebSocket("ws://" + document.location.host + "/ws");
-        // setTimeout(() => {
-        //     ws.send('eth2');
-        // }, 5000)
-        //
         var self = this;
         ws.onmessage = function(event) {
             var response = JSON.parse(event.data);
@@ -304,7 +298,7 @@ class App extends Component {
                         <span className="title2">Transactions</span>
                         <BarChart width={280} height={80} data={this.state.transactions} bind >
                             <Bar dataKey='transactions' fillKey='fill'/>
-                            <Tooltip dataKey='transactions' title='false' />
+                            <Tooltip/>
                         </BarChart>
                     </div>
                     <div className="box">
@@ -317,10 +311,10 @@ class App extends Component {
                         <span className="title2">Block Time</span>
                         <BarChart width={280} height={80}  data={this.state.times} bind>
                             <Bar dataKey='cont' fillKey='fill'  />
+                            <Tooltip/>
                         </BarChart>
                     </div>
                 </div>
-
             </div>
         );
     }
