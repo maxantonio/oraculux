@@ -119,7 +119,7 @@ class App extends Component {
         var temp = [];
         var total =0;
         for (var j = 0; j < this.state.times.length; j++) {
-            total+=this.state.times[j].time;
+            total+=this.state.times[j].cont;
             temp.push(this.state.times[j]);
         }
         var avg = total/temp.length;
