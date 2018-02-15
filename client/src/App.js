@@ -114,7 +114,7 @@ class App extends Component {
         }
     }
     addTime(time,block){
-
+//cambio
         var nuevo = {name: block, cont: time, fill: this.getTimeFill(time)}
         var temp = [];
         var total =0;
