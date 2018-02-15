@@ -69,6 +69,7 @@ class App extends Component {
     setSyncing(data){
         console.log("ESCRIBIENDO CON SYNCING")
         if(this.state.best_block !== data.CurrentBlock) {
+            this.addTime(this.state.last_block,data.CurrentBlock);
             this.setState({
                 best_block: data.CurrentBlock,
                 lastknow_block:data.HighestBlock,
@@ -301,7 +302,6 @@ class App extends Component {
                     </div>
                 </div>
                 <div className="row">
-
                     <div className="box">
                         <span className="title2">Transactions</span>
                         <BarChart width={280} height={80} data={this.state.transactions} bind >
