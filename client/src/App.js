@@ -28,6 +28,12 @@ class App extends Component {
             best_block: 0,
             lastknow_block:0,
             gas_price:0,
+            miners:["1","2"],
+            dificulty:0,
+            totalDificulty:0,
+            gasLimit:0,
+            gasUsed:0,
+
             uncles:[{name:0,cont:0,fill:"#ccc"}],
             uncle_val:0,
             uncle_50:0,
@@ -69,8 +75,19 @@ class App extends Component {
             });
         }
     }
+
+    setBlockData(data){
+            this.setState({
+                best_block: data.CurrentBlock,
+
+            });
+    }
     setStatus(type,data,block){
         switch(type){
+            case "Block":
+                //PETICION QUE DA LA INFO DEL BLOQUE,MINERO ETC
+                this.setBlockData(data)
+                break;
             case "FullBlock":
                 this.setBlock(data)
                 break;
@@ -126,8 +143,7 @@ class App extends Component {
         if( this.state.times.length>49)
             temp.shift();
         temp.push(nuevo);
-        this.setState(
-            {
+        this.setState({
                 times: temp,
                 avgtime:avg
             });
@@ -182,7 +198,6 @@ class App extends Component {
             });
         }, 1000);
     }
-
     numberWithCommas = (x) => {
         return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
