@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/onrik/ethrpc"
 	//"github.com/Pallinder/go-randomdata"
-	"github.com/Pallinder/go-randomdata"
+	//"github.com/Pallinder/go-randomdata"
 )
 var dummy = false
 var upgrader = websocket.Upgrader{
@@ -56,11 +56,11 @@ func (em *Emisora) start() {
 				delete(em.sockets, conn)
 			}
 		case <-invervalo:
-			temporal := em.GetFake()
+			//temporal := em.GetFake()
 
-		 	for cnn := range em.sockets {
-				cnn.send <- temporal
-			}
+		 	//for cnn := range em.sockets {
+			//	//cnn.send <- temporal
+			//}
 
 		}
 	}
@@ -88,6 +88,7 @@ func (s *Emisora) GetSyncing(rpc *ethrpc.EthRPC,c *Client) SocketInfo {
 				Info_type:"FullBlock",
 				Data:number,
 			}
+			go func() { c.send <- s.GetBlockByNumber(rpc,number)}()
 			go func() { c.send <- s.GetUncles(rpc,number) }()
 			go func() { c.send <- s.GetTransactionCount(rpc,number) }()
 			return sock
@@ -100,6 +101,7 @@ func (s *Emisora) GetSyncing(rpc *ethrpc.EthRPC,c *Client) SocketInfo {
 		fmt.Println("sinck pidioendo uncles")
 		go func() { c.send <- s.GetUncles(rpc,result.CurrentBlock) }()
 		go func() { c.send <- s.GetTransactionCount(rpc,result.CurrentBlock) }()
+		go func() { c.send <- s.GetBlockByNumber(rpc,result.CurrentBlock) }()
 	}
 
 
@@ -145,7 +147,25 @@ func (s *Emisora) GetTransactionCount(rpc *ethrpc.EthRPC,currentBlock int) Socke
 	fmt.Print(sock)
 	return sock
 }
-
+func (s *Emisora) GetBlockByNumber(rpc *ethrpc.EthRPC,currentBlock int) SocketInfo {
+	result,error := rpc.EthGetBlockByNumber(currentBlock,false)
+	var sock SocketInfo
+	if error != nil {
+		sock = SocketInfo{
+			Info_type:"Error",
+			Data:error,
+		}
+	}else{
+		sock = SocketInfo{
+			Info_type:"Block",
+			Data:result,
+			Block:currentBlock,
+		}
+	}
+	fmt.Println("fake generado")
+	fmt.Print(sock)
+	return sock
+}
 func (s *Emisora) GetUncles(rpc *ethrpc.EthRPC,currentBlock int) SocketInfo {
 	result,error := rpc.EthGetUncleCountByBlockNumber(currentBlock)
 	var sock SocketInfo
@@ -165,7 +185,6 @@ func (s *Emisora) GetUncles(rpc *ethrpc.EthRPC,currentBlock int) SocketInfo {
 	fmt.Print(sock)
 	return sock
 }
-
 func (s *Emisora) EthGasPrice(rpc *ethrpc.EthRPC) SocketInfo {
 	result,error := rpc.EthGasPrice()
 	var sock SocketInfo
@@ -184,7 +203,6 @@ func (s *Emisora) EthGasPrice(rpc *ethrpc.EthRPC) SocketInfo {
 	fmt.Print(sock)
 	return sock
 }
-
 func (s *Emisora) GetPeers(rpc *ethrpc.EthRPC) SocketInfo {
 	result,error := rpc.NetPeerCount()
 	var sock SocketInfo
@@ -204,22 +222,22 @@ func (s *Emisora) GetPeers(rpc *ethrpc.EthRPC) SocketInfo {
 	return sock
 }
 //Crea un nuevo objeto a mandar a las vista
-func (s *Emisora) GetFake() SocketInfo {
-	result := SendClass{
-		Identificador:s.identificador,
-		Best_Block: 1 + randomdata.Number(1, 90),
-		Uncles: 2 + randomdata.Number(1,70)/100,
-		Transactions: randomdata.Number(1, 80),
-		Uncle_count: 4 + randomdata.Number(1, 60)/100,
-	}
-	sock := SocketInfo{
-		Info_type:"Sendclass",
-		Data:result,
-	}
-	fmt.Println("fake generado")
-	fmt.Print(sock)
-    return sock
-}
+//func (s *Emisora) GetFake() SocketInfo {
+//	result := SendClass{
+//		Identificador:s.identificador,
+//		Best_Block: 1 + randomdata.Number(1, 90),
+//		Uncles: 2 + randomdata.Number(1,70)/100,
+//		Transactions: randomdata.Number(1, 80),
+//		Uncle_count: 4 + randomdata.Number(1, 60)/100,
+//	}
+//	sock := SocketInfo{
+//		Info_type:"Sendclass",
+//		Data:result,
+//	}
+//	fmt.Println("fake generado")
+//	fmt.Print(sock)
+//    return sock
+//}
 
 
 
@@ -272,7 +290,7 @@ func (c *Client) write() {
 		case <-ticker.C:
 			fmt.Println("Generando facke")
 			if (dummy) {
-				go func() { c.send <- emisora.GetFake() }()
+				//go func() { c.send <- emisora.GetFake() }()
 				fmt.Println("Fake pedido")
 			} else {
 				go func() { c.send <- emisora.GetEthHashrate(ethclient) }()
