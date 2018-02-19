@@ -58,7 +58,7 @@ func (em *Emisora) start() {
 		case <-invervalo:
 			//temporal := em.GetFake()
 
-		 	//for cnn := range em.sockets {
+			//for cnn := range em.sockets {
 			//	//cnn.send <- temporal
 			//}
 
@@ -330,7 +330,7 @@ func (c *Client) read() {
 		if err != nil {
 			hub.removeClient <- c
 			for i := 0; i < len(c.subs); i++ {
-			  FirstValues[c.subs[i]].removeClient <- c
+				FirstValues[c.subs[i]].removeClient <- c
 			}
 			c.ws.Close()
 			break
@@ -364,9 +364,9 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 	//	http.ServeFile(w, r, "../client/build/index.html")
 	//	return
 	//}else{
-		urlfile := "../client/build"+r.URL.Path
-		fmt.Println("retorna fichero",urlfile)
-		http.ServeFile(w, r, urlfile)
+	urlfile := "../client/build"+r.URL.Path
+	fmt.Println("retorna fichero",urlfile)
+	http.ServeFile(w, r, urlfile)
 	//	return
 	//}
 	//http.ServeFile(w, r, "../client/build/index.html")
