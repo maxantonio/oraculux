@@ -118,7 +118,7 @@ class App extends Component {
     setBlockData(data){
         console.log("SETING BLOCK INFO");
             var newminers = [];
-            newminers.push(this.state.Miners[0]);
+            newminers.push(this.state.miners[0]);
             newminers.push(data.Miner);
             this.setGasUsed(data.GasUsed);
             this.setGasLimit(data.GasLimit)
