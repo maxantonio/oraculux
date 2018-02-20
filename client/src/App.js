@@ -82,9 +82,9 @@ class App extends Component {
         if(this.state.gasUsed.length>49)
             inicio = 1
         for (var i = inicio; i < this.state.gasUsed.length; i++) {
-            temp.push(this.state.gasUsed[j]);
+            temp.push(this.state.gasUsed[i]);
         }
-        temp.push({cont:gass,fill:getTimeFill()});
+        temp.push({cont:gass,fill:this.getTimeFill()});
         this.setState({
                 gasUsed:temp
             });
@@ -95,9 +95,9 @@ class App extends Component {
         if(this.state.gasLimitList.length>49)
             inicio = 1
         for (var i = inicio; i < this.state.gasLimitList.length; i++) {
-            temp.push(this.state.gasLimitList[j]);
+            temp.push(this.state.gasLimitList[i]);
         }
-        temp.push({cont:gass,fill:getTimeFill()});
+        temp.push({cont:gass,fill:this.getTimeFill()});
         this.setState({
             gasLimitList:temp
         });
@@ -108,9 +108,9 @@ class App extends Component {
         if(this.state.dificulties.length>49)
             inicio = 1
         for (var i = inicio; i < this.state.dificulties.length; i++) {
-            temp.push(this.state.dificulties[j]);
+            temp.push(this.state.dificulties[i]);
         }
-        temp.push({cont:gass,fill:getTimeFill()});
+        temp.push({cont:gass,fill:this.getTimeFill()});
         this.setState({
             dificulties:temp
         });
@@ -120,9 +120,9 @@ class App extends Component {
             var newminers = [];
             newminers.push(this.state.Miners[0]);
             newminers.push(data.Miner);
-            setGasUsed(data.GasUsed);
-            setGasLimit(data.GasLimit)
-            setDificulties(data.Difficulty)
+            this.setGasUsed(data.GasUsed);
+            this.setGasLimit(data.GasLimit)
+            this.setDificulties(data.Difficulty)
             this.setState({
                 miners: newminers,
                 dificulty:data.Difficulty,
