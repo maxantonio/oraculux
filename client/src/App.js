@@ -30,10 +30,11 @@ class App extends Component {
             gas_price:0,
             miners:["1","2"],
             dificulty:0,
+            dificulties:[],
             totalDificulty:0,
             gasLimit:0,
-            gasUsed:0,
-
+            gasLimitList:[],
+            gasUsed:[],
             uncles:[{name:0,cont:0,fill:"#ccc"}],
             uncle_val:0,
             uncle_50:0,
@@ -75,12 +76,60 @@ class App extends Component {
             });
         }
     }
-
-    setBlockData(data){
-            this.setState({
-                best_block: data.CurrentBlock,
-
+    setGasUsed(gass){
+        var temp = [];
+        var inicio = 0
+        if(this.state.gasUsed.length>49)
+            inicio = 1
+        for (var i = inicio; i < this.state.gasUsed.length; i++) {
+            temp.push(this.state.gasUsed[j]);
+        }
+        temp.push({cont:gass,fill:getTimeFill()});
+        this.setState({
+                gasUsed:temp
             });
+    }
+    setGasLimit(gass){
+        var temp = [];
+        var inicio = 0
+        if(this.state.gasLimitList.length>49)
+            inicio = 1
+        for (var i = inicio; i < this.state.gasLimitList.length; i++) {
+            temp.push(this.state.gasLimitList[j]);
+        }
+        temp.push({cont:gass,fill:getTimeFill()});
+        this.setState({
+            gasLimitList:temp
+        });
+    }
+    setDificulties(gass){
+        var temp = [];
+        var inicio = 0
+        if(this.state.dificulties.length>49)
+            inicio = 1
+        for (var i = inicio; i < this.state.dificulties.length; i++) {
+            temp.push(this.state.dificulties[j]);
+        }
+        temp.push({cont:gass,fill:getTimeFill()});
+        this.setState({
+            dificulties:temp
+        });
+    }
+    setBlockData(data){
+        console.log("SETING BLOCK INFO");
+            var newminers = [];
+            newminers.push(this.state.Miners[0]);
+            newminers.push(data.Miner);
+            setGasUsed(data.GasUsed);
+            setGasLimit(data.GasLimit)
+            setDificulties(data.Difficulty)
+            this.setState({
+                miners: newminers,
+                dificulty:data.Difficulty,
+                totalDificulty:data.TotalDifficulty,
+                gasLimit:data.GasLimit,
+               });
+        console.log("SETTED BLOCK INFO");
     }
     setStatus(type,data,block){
         switch(type){
@@ -160,10 +209,8 @@ class App extends Component {
             }
             var result = 0
             for(var i in temp) {
-                console.log(i);
                 result += temp[i].cont;
             }
-            console.log("RESULT DEL REDUXE",result);
             this.setState({ uncles:temp,uncle_50:result,uncle_val:nuevo.cont});
         }
     }
@@ -264,7 +311,7 @@ class App extends Component {
                             <div className="pull-left icon tc-red"><i className="fa fa-puzzle-piece fa-4x"></i></div>
                             <div className="info">
                                 <span className="title">difficulty</span>
-                                <span className="value tc-red">0.00 H</span>
+                                <span className="value tc-red">{this.state.dificulty} H</span>
                             </div>
                         </div>
                     </div>
@@ -288,7 +335,7 @@ class App extends Component {
                         <div>
                             <i className="fa fa-tag ml-2 tc-blue fa-flip-horizontal"></i>
                             <span className="title ml-3">gas limit</span>
-                            <span className="pull-right tc-blue mr-2">8000029 gas</span>
+                            <span className="pull-right tc-blue mr-2">{this.state.gasLimit} gas</span>
                         </div>
                     </div>
                     <div className="box-small">
@@ -328,6 +375,39 @@ class App extends Component {
                             <Bar dataKey='cont' fillKey='fill'  />
                             <Tooltip/>
                         </BarChart>
+                    </div>
+                    <div className="box">
+                        <span className="title2">DIFFICULTY</span>
+                        <BarChart width={280} height={80}  data={this.state.dificulties} bind>
+                            <Bar dataKey='cont' fillKey='fill'  />
+                            <Tooltip/>
+                        </BarChart>
+                    </div>
+                </div>
+                <div className="row">
+                    <div className="box">
+                        <span className="title2">GAS SPENDING</span>
+                        <BarChart width={280} height={80} data={this.state.gasUsed} bind >
+                            <Bar dataKey='cont' fillKey='fill'/>
+                            <Tooltip/>
+                        </BarChart>
+                    </div>
+                    <div className="box">
+                        <span className="title2">GAS LIMIT</span>
+                        <BarChart width={280} height={80}  data={this.state.gasLimit} bind>
+                            <Bar dataKey='cont' fillKey='fill'  />
+                        </BarChart>
+                    </div>
+
+                    <div className="box" >
+                        <span class="small-title">last blocks miners</span>
+                        <div class="small-title-miner ng-binding">{this.state.miners[0]}</div>
+                        <div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div>
+                        <div class="small-title-miner ng-binding">{this.state.miners[1]}</div>
+                        <div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div>
+                    </div>
+                    <div className="box">
+
                     </div>
                 </div>
             </div>
