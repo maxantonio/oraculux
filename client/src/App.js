@@ -118,7 +118,7 @@ class App extends Component {
     setBlockData(data){
         console.log("SETING BLOCK INFO");
             var newminers = [];
-            newminers.push(this.state.miners[0]);
+            newminers.push(this.state.miners[1]);
             newminers.push(data.Miner);
             this.setGasUsed(data.GasUsed);
             this.setGasLimit(data.GasLimit)
@@ -394,17 +394,21 @@ class App extends Component {
                     </div>
                     <div className="box">
                         <span className="title2">GAS LIMIT</span>
-                        <BarChart width={280} height={80}  data={this.state.gasLimit} bind>
+                        <BarChart width={280} height={80}  data={this.state.gasLimitList} bind>
                             <Bar dataKey='cont' fillKey='fill'  />
                         </BarChart>
                     </div>
 
                     <div className="box" >
-                        <span class="small-title">last blocks miners</span>
+                        <span class="title2">last blocks miners</span>
                         <div class="small-title-miner ng-binding">{this.state.miners[0]}</div>
+                        <div blocks="14">
                         <div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div>
+                        </div>
                         <div class="small-title-miner ng-binding">{this.state.miners[1]}</div>
-                        <div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div>
+                       <div blocks="14">
+                           <div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div>
+                       </div>
                     </div>
                     <div className="box">
 
