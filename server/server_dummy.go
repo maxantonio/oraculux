@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"fmt"
 	"time"
-	"strings"
 	"github.com/gorilla/websocket"
 	"github.com/onrik/ethrpc"
 	//"github.com/Pallinder/go-randomdata"
@@ -16,7 +15,19 @@ var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
+const (
+	// Time allowed to write a message to the peer.
+	writeWait =  time.Second
 
+	// Time allowed to read the next pong message from the peer.
+	pongWait = 2 * time.Second
+
+	// Send pings to peer with this period. Must be less than pongWait.
+	pingPeriod = (pongWait * 9) / 10
+
+	// Maximum message size allowed from peer.
+	maxMessageSize = 512
+)
 //Clase a mandar para React
 type SendClass struct {
 	Identificador  string `json:"symb"`
@@ -25,11 +36,25 @@ type SendClass struct {
 	Transactions int `json:"transactions"`
 	Uncle_count int `json:"uncle_count"`
 }
+
 type SocketInfo struct {
+	Server string `json:"server"`
 	Info_type string `json:"info_type"`
 	Data interface{} `json:"data"`
 	Block int `json:"block"`
 }
+//para obtener info de una API
+type Server struct{
+	ws   *websocket.Conn
+	send chan ServerInfo
+}
+type ServerInfo struct{
+	Sincing *ethrpc.Syncing
+	Block *ethrpc.Block
+	Peers int
+	isMining bool
+}
+
 //para cuando un usuario se conecta
 type Client struct {
 	ws   *websocket.Conn
@@ -221,25 +246,6 @@ func (s *Emisora) GetPeers(rpc *ethrpc.EthRPC) SocketInfo {
 	fmt.Print(sock)
 	return sock
 }
-//Crea un nuevo objeto a mandar a las vista
-//func (s *Emisora) GetFake() SocketInfo {
-//	result := SendClass{
-//		Identificador:s.identificador,
-//		Best_Block: 1 + randomdata.Number(1, 90),
-//		Uncles: 2 + randomdata.Number(1,70)/100,
-//		Transactions: randomdata.Number(1, 80),
-//		Uncle_count: 4 + randomdata.Number(1, 60)/100,
-//	}
-//	sock := SocketInfo{
-//		Info_type:"Sendclass",
-//		Data:result,
-//	}
-//	fmt.Println("fake generado")
-//	fmt.Print(sock)
-//    return sock
-//}
-
-
 
 var FirstValues = map[string]Emisora{
 	"eth1": { "eth1",  0,  make(map[*Client]bool), make(chan *Client), make(chan *Client)},
@@ -251,16 +257,22 @@ var FirstValues = map[string]Emisora{
 
 type Hub struct {
 	clients      map[*Client]bool
-	broadcast    chan []byte
+	servers		map[*Server]bool
+	broadcast    chan SocketInfo
 	addClient    chan *Client
 	removeClient chan *Client
+	addServer	 chan *Server
+	removeServer chan *Server
 }
 
 var hub = Hub{
-	broadcast:    make(chan []byte),
+	broadcast:    make(chan SocketInfo),
 	addClient:    make(chan *Client),
+	addServer:    make(chan *Server),
 	removeClient: make(chan *Client),
+	removeServer: make(chan *Server),
 	clients:      make(map[*Client]bool),
+	servers:      make(map[*Server]bool),
 }
 
 func (hub *Hub) start() {
@@ -268,10 +280,26 @@ func (hub *Hub) start() {
 		select {
 		case conn := <-hub.addClient:
 			hub.clients[conn] = true
+		case conn := <-hub.addServer:
+			hub.servers[conn] = true
+		case conn := <-hub.removeServer:
+			if _, ok := hub.servers[conn]; ok {
+				delete(hub.servers, conn)
+				//close(conn.read)  ver si es necesario cerrar el read del server
+			}
 		case conn := <-hub.removeClient:
 			if _, ok := hub.clients[conn]; ok {
 				delete(hub.clients, conn)
 				close(conn.send)
+			}
+		case message := <-hub.broadcast:
+			for client := range hub.clients {
+				select {
+				case client.send <- message:
+				default:
+					close(client.send)
+					delete(hub.clients, client)
+				}
 			}
 		}
 	}
@@ -281,7 +309,7 @@ func (c *Client) write() {
 	defer func() {
 		c.ws.Close()
 	}()
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(10*time.Second)
 	emisora := FirstValues["eth1"]
 	fmt.Println("iniciado write")
 	ethclient := ethrpc.New("http://127.0.0.1:8545")
@@ -307,32 +335,24 @@ func (c *Client) write() {
 	}
 }
 
-func (c *Client) read() {
+func (c *Client) writeServers(){
+
+}
+
+func (s *Server) read() {
 
 	defer func() {
-		hub.removeClient <- c
-		c.ws.Close()
+		hub.removeServer <- s
+		s.ws.Close()
 	}()
-
 	for {
-		_, message, err := c.ws.ReadMessage()
+		_, message, err := s.ws.ReadMessage()
+		fmt.Println(message)
 		str :=  string(message[:])
-		if !strings.Contains(str, "cancelar_") {
-			emisoraObj := FirstValues[str]
-			emisoraObj.addClient <- c
-			fmt.Println(str)
-			c.subs = append(c.subs, str)
-		}else {
-			emisoraObj :=  FirstValues[strings.SplitAfter(str, "_")[1]]
-			emisoraObj.removeClient <- c
-			fmt.Println(str)
-		}
+		fmt.Println(str)
 		if err != nil {
-			hub.removeClient <- c
-			for i := 0; i < len(c.subs); i++ {
-				FirstValues[c.subs[i]].removeClient <- c
-			}
-			c.ws.Close()
+			hub.removeServer <- s
+			s.ws.Close()
 			break
 		}
 	}
@@ -349,28 +369,33 @@ func wsIndex(res http.ResponseWriter, req *http.Request){
 
 	hub.addClient <- client
 	fmt.Println("cliente recibido")
-	go client.write()
-	go client.read()
+	go client.write() //mostrando info servidor local
+	go client.writeServers() //mostrando info servidores conectados
+}
+func wsApi(res http.ResponseWriter, req *http.Request){
+	conn, _ := upgrader.Upgrade(res, req, nil)
+
+	server := &Server{
+		ws:   conn,
+		send: make(chan ServerInfo),
+	}
+
+	hub.addServer <- server
+	fmt.Println("server conectado")
+	go server.read()
 }
 func serveHome(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("manejado por serveHome")
-	fmt.Println(r.URL.Path)
-	if r.Method != "GET" {
-		http.Error(w, "Method not allowed", 405)
-		return
+		fmt.Println("manejado por serveHome")
+		fmt.Println(r.URL.Path)
+		if r.Method != "GET" {
+			http.Error(w, "Method not allowed", 405)
+			return
+		}
+
+		urlfile := "../client/build"+r.URL.Path
+		fmt.Println("retorna fichero",urlfile)
+		http.ServeFile(w, r, urlfile)
 	}
-	//if r.URL.Path == "/" {
-	//	fmt.Println("retorna html index")
-	//	http.ServeFile(w, r, "../client/build/index.html")
-	//	return
-	//}else{
-	urlfile := "../client/build"+r.URL.Path
-	fmt.Println("retorna fichero",urlfile)
-	http.ServeFile(w, r, urlfile)
-	//	return
-	//}
-	//http.ServeFile(w, r, "../client/build/index.html")
-}
 func main() {
 	go hub.start()
 	//for v  := range FirstValues{
@@ -383,6 +408,9 @@ func main() {
 	})
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request){
 		wsIndex(w, r)
+	})
+	http.HandleFunc("/api", func(w http.ResponseWriter, r *http.Request){
+		wsApi(w, r)
 	})
 	http.ListenAndServe(":80",nil)
 	//este si
