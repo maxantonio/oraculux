@@ -8,6 +8,7 @@ import (
 	"github.com/onrik/ethrpc"
 	//"github.com/Pallinder/go-randomdata"
 	//"github.com/Pallinder/go-randomdata"
+	"encoding/json"
 )
 var dummy = false
 var upgrader = websocket.Upgrader{
@@ -49,17 +50,20 @@ type Server struct{
 	send chan ServerInfo
 }
 type ServerInfo struct{
-	Sincing *ethrpc.Syncing
-	Block *ethrpc.Block
-	Peers int
-	isMining bool
+	Sincing     *ethrpc.Syncing
+	Block       *ethrpc.Block
+	BlockNumber int
+	Peers       int
+	IsMining    bool
+	Err         error
 }
 
 //para cuando un usuario se conecta
 type Client struct {
-	ws   *websocket.Conn
-	send chan SocketInfo
-	subs []string
+	ws         *websocket.Conn
+	send       chan SocketInfo
+	sendServer chan SocketInfo
+	subs       []string
 }
 type Emisora struct{
 	identificador string
@@ -122,16 +126,10 @@ func (s *Emisora) GetSyncing(rpc *ethrpc.EthRPC,c *Client) SocketInfo {
 			Info_type:"Syncing",
 			Data:result,
 		}
-		fmt.Print(sock)
-		fmt.Println("sinck pidioendo uncles")
 		go func() { c.send <- s.GetUncles(rpc,result.CurrentBlock) }()
 		go func() { c.send <- s.GetTransactionCount(rpc,result.CurrentBlock) }()
 		go func() { c.send <- s.GetBlockByNumber(rpc,result.CurrentBlock) }()
 	}
-
-
-
-	fmt.Println("sinck terminado")
 	return sock
 }
 
@@ -149,8 +147,6 @@ func (s *Emisora) GetEthHashrate(rpc *ethrpc.EthRPC) SocketInfo {
 			Data:result,
 		}
 	}
-	fmt.Println("fake generado")
-	fmt.Print(sock)
 	return sock
 }
 func (s *Emisora) GetTransactionCount(rpc *ethrpc.EthRPC,currentBlock int) SocketInfo {
@@ -168,8 +164,6 @@ func (s *Emisora) GetTransactionCount(rpc *ethrpc.EthRPC,currentBlock int) Socke
 			Block:currentBlock,
 		}
 	}
-	fmt.Println("fake generado")
-	fmt.Print(sock)
 	return sock
 }
 func (s *Emisora) GetBlockByNumber(rpc *ethrpc.EthRPC,currentBlock int) SocketInfo {
@@ -187,8 +181,6 @@ func (s *Emisora) GetBlockByNumber(rpc *ethrpc.EthRPC,currentBlock int) SocketIn
 			Block:currentBlock,
 		}
 	}
-	fmt.Println("fake generado")
-	fmt.Print(sock)
 	return sock
 }
 func (s *Emisora) GetUncles(rpc *ethrpc.EthRPC,currentBlock int) SocketInfo {
@@ -206,8 +198,6 @@ func (s *Emisora) GetUncles(rpc *ethrpc.EthRPC,currentBlock int) SocketInfo {
 			Block:currentBlock,
 		}
 	}
-	fmt.Println("fake generado")
-	fmt.Print(sock)
 	return sock
 }
 func (s *Emisora) EthGasPrice(rpc *ethrpc.EthRPC) SocketInfo {
@@ -249,10 +239,6 @@ func (s *Emisora) GetPeers(rpc *ethrpc.EthRPC) SocketInfo {
 
 var FirstValues = map[string]Emisora{
 	"eth1": { "eth1",  0,  make(map[*Client]bool), make(chan *Client), make(chan *Client)},
-	"eth2": { "eth2", 0,  make(map[*Client]bool), make(chan *Client), make(chan *Client)},
-	"eth3": { "eth3",  0,  make(map[*Client]bool), make(chan *Client), make(chan *Client)},
-	"eth4": { "eth4", 0, make(map[*Client]bool), make(chan *Client), make(chan *Client)},
-	"eth5": { "eth5",  0,  make(map[*Client]bool), make(chan *Client), make(chan *Client)},
 }
 
 type Hub struct {
@@ -292,12 +278,15 @@ func (hub *Hub) start() {
 				delete(hub.clients, conn)
 				close(conn.send)
 			}
+
 		case message := <-hub.broadcast:
 			for client := range hub.clients {
 				select {
-				case client.send <- message:
+				case client.sendServer <- message:
 				default:
-					close(client.send)
+					fmt.Println("cerrando el canal por algun motivo??")
+					fmt.Println(message)
+					close(client.sendServer)
 					delete(hub.clients, client)
 				}
 			}
@@ -328,7 +317,7 @@ func (c *Client) write() {
 				fmt.Println("Info  pedido")
 			}
 		case message := <-c.send:
-			fmt.Println("Escribiendo mensaje")
+			fmt.Println("Escribiendo mensaje De Server ?")
 			fmt.Println(message)
 			c.ws.WriteJSON(message)
 		}
@@ -336,20 +325,42 @@ func (c *Client) write() {
 }
 
 func (c *Client) writeServers(){
-
+	for {
+		select {
+		case message := <-c.sendServer:
+			fmt.Println("Escribiendo mensaje De Server ?")
+			fmt.Println(message)
+			c.ws.WriteJSON(message)
+		}
+	}
 }
 
 func (s *Server) read() {
-
 	defer func() {
 		hub.removeServer <- s
 		s.ws.Close()
 	}()
 	for {
 		_, message, err := s.ws.ReadMessage()
-		fmt.Println(message)
+		//fmt.Println(message)
+		data := &ServerInfo{}
+		err2 := json.Unmarshal(message, data)
 		str :=  string(message[:])
-		fmt.Println(str)
+		if (err2 != nil) {
+			fmt.Print("ERROR TRATANDO DE PARSEAR")
+
+			fmt.Println(str)
+		} else {
+			fmt.Println("Todo un exito ;)")
+			fmt.Println(str)
+			info := &SocketInfo{
+				Info_type: "Server",
+				Data:      data,
+				Server:    "por definir",
+			}
+			hub.broadcast <- *info
+		}
+
 		if err != nil {
 			hub.removeServer <- s
 			s.ws.Close()
@@ -362,13 +373,13 @@ func wsIndex(res http.ResponseWriter, req *http.Request){
 	conn, _ := upgrader.Upgrade(res, req, nil)
 
 	client := &Client{
-		ws:   conn,
-		send: make(chan SocketInfo),
-		subs: []string{},
+		ws:         conn,
+		send:       make(chan SocketInfo),
+		sendServer: make(chan SocketInfo),
+		subs:       []string{},
 	}
 
 	hub.addClient <- client
-	fmt.Println("cliente recibido")
 	go client.write() //mostrando info servidor local
 	go client.writeServers() //mostrando info servidores conectados
 }

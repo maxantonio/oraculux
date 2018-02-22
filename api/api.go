@@ -12,6 +12,7 @@ import (
 	"os"
 	"net/url"
 	"os/signal"
+	"net"
 )
 type Server struct{
 	socket *websocket.Conn
@@ -19,12 +20,13 @@ type Server struct{
 	rpc *ethrpc.EthRPC
 }
 type ServerInfo struct{
-	Sincing *ethrpc.Syncing
-	Block *ethrpc.Block
+	Server      string
+	Sincing     *ethrpc.Syncing
+	Block       *ethrpc.Block
 	BlockNumber int
-	Peers int
-	IsMining bool
-	Err error
+	Peers       int
+	IsMining    bool
+	Err         error
 }
 
 func (s *Server) write() {
@@ -50,7 +52,18 @@ func (s *Server) write() {
 
 var addr = flag.String("addr", "localhost:80", "http service address")
 
+func (server *Server) start() {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
 
+	for {
+		select {
+		case t := <-ticker.C:
+			fmt.Print(t.String())
+			server.write()
+		}
+	}
+}
 func main() {
 	flag.Parse()
 	log.SetFlags(0)
@@ -66,21 +79,30 @@ func main() {
 		log.Fatal("dial:", err)
 	}
 	defer c.Close()
+	ifaces, err := net.Interfaces()
+	var ip net.IP
+	for _, i := range ifaces {
+		addrs, _ := i.Addrs()
+		// handle err
+		for _, addr := range addrs {
 
-	serverInfo := &ServerInfo{}
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			}
+
+			// process IP address
+		}
+	}
+	serverInfo := &ServerInfo{
+		Server: ip.String(),
+	}
 	server := &Server{
 		socket:   c,
 		ServerInfo: serverInfo,
 		rpc:ethclient,
 	}
-
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-	for {
-		select {
-		case t := <-ticker.C:
-			fmt.Print(t.String())
-			go server.write()
-		}
-	}
+	go server.start()
 }
