@@ -1,8 +1,11 @@
 import React, {Component} from 'react';
 import { BarChart,Bar,Tooltip } from 'recharts';
 import './App.css';
+import {Servers} from "./components/Server";
+
 
 class App extends Component {
+
 
     constructor() {
         super();
@@ -39,7 +42,11 @@ class App extends Component {
             uncle_val:0,
             uncle_50:0,
             hash_rate:0,
-            peers:0
+            peers: 0,
+            servers: [
+                {Server: "Server 1", Peers: 5},
+                {Server: "Server 2", Peers: 50}
+            ]
         };
 
          this.last_Block();
@@ -51,11 +58,41 @@ class App extends Component {
                 case "Syncing":
                     self.setSyncing(response.data);
                     break;
+                case "Server":
+                    self.setServersD(response.data)
+                    break;
                  default:
                     self.setStatus(response.info_type,response.data,response.block);
                     break;
             }
         }
+    }
+
+    setServersD(data) {
+        console.log("ESTAMOS PROCESANDO UNSERVER")
+        console.log(this.state);
+        console.log("ya vite");
+        var serversOld = this.state.servers;
+        console.log("no llego");
+        var servers = [];
+        var finded = false;
+        for (var i = 0; i < serversOld.length; i++) {
+            var server = serversOld[i];
+            if (server.Server == data.Server) {
+                server = data;
+                finded = true;
+            }
+            servers.push(server);
+        }
+        if (!finded) {
+            servers.push(data);
+        }
+        console.log(servers)
+        this.setState({
+                server: servers
+            }
+        );
+        console.log("DEBIO PROCESAR EL SERVER");
     }
     setBlock(data){
         if(this.state.best_block !== data) {
@@ -414,7 +451,12 @@ class App extends Component {
 
                     </div>
                 </div>
+                <div className="row">
+                    <Servers servers={this.state.servers}/>
+
+                </div>
             </div>
+
         );
     }
 }

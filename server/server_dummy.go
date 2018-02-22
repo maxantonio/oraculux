@@ -50,6 +50,7 @@ type Server struct{
 	send chan ServerInfo
 }
 type ServerInfo struct{
+	Server      string
 	Sincing     *ethrpc.Syncing
 	Block       *ethrpc.Block
 	BlockNumber int
@@ -348,8 +349,8 @@ func (s *Server) read() {
 		str :=  string(message[:])
 		if (err2 != nil) {
 			fmt.Print("ERROR TRATANDO DE PARSEAR")
-
 			fmt.Println(str)
+			fmt.Println(err2)
 		} else {
 			fmt.Println("Todo un exito ;)")
 			fmt.Println(str)

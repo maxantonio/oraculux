@@ -15,9 +15,11 @@ import (
 	"net"
 )
 type Server struct{
-	socket *websocket.Conn
+	socket     *websocket.Conn
 	ServerInfo *ServerInfo
-	rpc *ethrpc.EthRPC
+	rpc        *ethrpc.EthRPC
+	last_block int
+	last_peers int
 }
 type ServerInfo struct{
 	Server      string
@@ -45,9 +47,15 @@ func (s *Server) write() {
 		s.ServerInfo.Peers,s.ServerInfo.Err = s.rpc.NetPeerCount()
 	}
 	fmt.Println("Info  pedido de envio")
-	s.socket.WriteJSON(s.ServerInfo)
-	fmt.Print(s.ServerInfo.BlockNumber)
-	fmt.Println("Info  Enviada")
+	if (s.ServerInfo.BlockNumber > s.last_block || s.ServerInfo.Peers != s.last_peers) {
+		s.socket.WriteJSON(s.ServerInfo)
+		fmt.Print(s.ServerInfo.BlockNumber)
+		fmt.Println("Info  Enviada")
+	}
+	s.last_block = s.ServerInfo.BlockNumber
+	s.last_peers = s.ServerInfo.Peers
+
+
 }
 
 var addr = flag.String("addr", "localhost:80", "http service address")
@@ -100,9 +108,11 @@ func main() {
 		Server: ip.String(),
 	}
 	server := &Server{
-		socket:   c,
+		socket:     c,
 		ServerInfo: serverInfo,
-		rpc:ethclient,
+		rpc:        ethclient,
+		last_block: 0,
+		last_peers: 0,
 	}
-	go server.start()
+	server.start()
 }

@@ -103,3 +103,9 @@ span.title2 {
     line-height: 20px;
     color: #000000;
 }
+
+.full-table {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 22px;
+}
