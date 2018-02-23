@@ -217,8 +217,7 @@ func (s *Emisora) EthGasPrice(rpc *ethrpc.EthRPC) SocketInfo {
 			Data:result.String(),
 		}
 	}
-	fmt.Println("fake generado")
-	fmt.Print(sock)
+
 	return sock
 }
 func (s *Emisora) GetPeers(rpc *ethrpc.EthRPC) SocketInfo {
@@ -235,8 +234,7 @@ func (s *Emisora) GetPeers(rpc *ethrpc.EthRPC) SocketInfo {
 			Data:result,
 		}
 	}
-	fmt.Println("fake generado")
-	fmt.Print(sock)
+
 	return sock
 }
 
@@ -287,8 +285,7 @@ func (hub *Hub) start() {
 				select {
 				case client.sendServer <- message:
 				default:
-					fmt.Println("cerrando el canal por algun motivo??")
-					fmt.Println(message)
+
 					close(client.sendServer)
 					delete(hub.clients, client)
 				}
@@ -303,12 +300,10 @@ func (c *Client) write() {
 	}()
 	ticker := time.NewTicker(2 * time.Second)
 	emisora := FirstValues["eth1"]
-	fmt.Println("iniciado write")
 	ethclient := ethrpc.New("http://127.0.0.1:8545")
 	for {
 		select {
 		case <-ticker.C:
-			fmt.Println("Generando facke")
 			if (dummy) {
 				//go func() { c.send <- emisora.GetFake() }()
 				fmt.Println("Fake pedido")
@@ -320,7 +315,6 @@ func (c *Client) write() {
 				fmt.Println("Info  pedido")
 			}
 		case message := <-c.send:
-			fmt.Println(message)
 			c.ws.WriteJSON(message)
 		}
 	}
@@ -330,8 +324,6 @@ func (c *Client) writeServers(){
 	for {
 		select {
 		case message := <-c.sendServer:
-			fmt.Println("Escribiendo mensaje De Server ?")
-			fmt.Println(message)
 			c.ws.WriteJSON(message)
 		}
 	}
@@ -344,17 +336,11 @@ func (s *Server) read() {
 	}()
 	for {
 		_, message, err := s.ws.ReadMessage()
-		//fmt.Println(message)
 		data := &ServerInfo{}
 		err2 := json.Unmarshal(message, data)
-		str :=  string(message[:])
 		if (err2 != nil) {
-			fmt.Print("ERROR TRATANDO DE PARSEAR")
-			fmt.Println(str)
 			fmt.Println(err2)
 		} else {
-			fmt.Println("Todo un exito ;)")
-			fmt.Println(str)
 			info := &SocketInfo{
 				Info_type: "Server",
 				Data:      data,
@@ -398,8 +384,6 @@ func wsApi(res http.ResponseWriter, req *http.Request){
 	go server.read()
 }
 func serveHome(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("manejado por serveHome")
-		fmt.Println(r.URL.Path)
 		if r.Method != "GET" {
 			http.Error(w, "Method not allowed", 405)
 			return
