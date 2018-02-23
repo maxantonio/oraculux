@@ -21,6 +21,7 @@ type Server struct{
 	last_block    int
 	last_peers    int
 	pendingFilter string
+	eth_coinbase  string
 }
 type ServerInfo struct{
 	Server       string
@@ -49,6 +50,7 @@ func (s *Server) write() {
 		}
 		s.ServerInfo.Block,s.ServerInfo.Err = s.rpc.EthGetBlockByNumber(s.ServerInfo.BlockNumber,false)
 		s.ServerInfo.Peers,s.ServerInfo.Err = s.rpc.NetPeerCount()
+		s.ServerInfo.Pending, s.ServerInfo.Err = s.rpc.EthGetTransactionCount(s.eth_coinbase, "pending")
 		s.ServerInfo.Transactions, s.ServerInfo.Err = s.rpc.EthGetBlockTransactionCountByNumber(s.ServerInfo.BlockNumber)
 
 	}
@@ -113,12 +115,14 @@ func main() {
 	serverInfo := &ServerInfo{
 		Server: ip.String(),
 	}
+	base, _ := ethclient.EthCoinbase()
 	server := &Server{
-		socket:     c,
-		ServerInfo: serverInfo,
-		rpc:        ethclient,
-		last_block: 0,
-		last_peers: 0,
+		socket:       c,
+		ServerInfo:   serverInfo,
+		rpc:          ethclient,
+		last_block:   0,
+		last_peers:   0,
+		eth_coinbase: base,
 	}
 
 	server.pendingFilter, _ = server.rpc.EthNewPendingTransactionFilter()

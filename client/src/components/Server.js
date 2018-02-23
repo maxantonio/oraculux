@@ -51,7 +51,7 @@ export class Servers extends React.Component {
                         <td>{server.Block.TotalDifficulty}</td>
                         <td>{server.Transactions}</td>
                         <td>{server.Block.Uncles.length}</td>
-                        <td>?</td>
+                        <td>{server.Penging}</td>
 
                     </tr>
                 )}
