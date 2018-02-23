@@ -318,7 +318,6 @@ func (c *Client) write() {
 				fmt.Println("Info  pedido")
 			}
 		case message := <-c.send:
-			fmt.Println("Escribiendo mensaje De Server ?")
 			fmt.Println(message)
 			c.ws.WriteJSON(message)
 		}
