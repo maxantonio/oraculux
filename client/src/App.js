@@ -43,10 +43,7 @@ class App extends Component {
             uncle_50:0,
             hash_rate:0,
             peers: 0,
-            servers: [
-                {Server: "Server 1", Peers: 5},
-                {Server: "Server 2", Peers: 50}
-            ]
+            servers: []
         };
 
          this.last_Block();
@@ -89,7 +86,7 @@ class App extends Component {
         }
         console.log(servers)
         this.setState({
-                server: servers
+            servers: servers
             }
         );
         console.log("DEBIO PROCESAR EL SERVER");
@@ -235,7 +232,7 @@ class App extends Component {
             });
     }
     addUncle(count,block){
-        if(this.uncles.length===0||block!==this.uncles[this.uncles.length-1].name) {
+        if (this.uncles.length === 0 || block > this.uncles[this.uncles.length - 1].name) {
             var nuevo = {name: block, cont: count, fill: this.getTransFill(count)}
             this.uncles.push(nuevo);
             if(this.uncles.length>50)
@@ -253,7 +250,7 @@ class App extends Component {
     }
     addTransactions(count,block){
         //AQUI ES NECESARIO
-        if(block!==this.transactions[this.transactions.length-1].name) {
+        if (block > this.transactions[this.transactions.length - 1].name) {
             console.log(block," > ",this.transactions[this.transactions.length-1].name)
             var trans = [];
             if(this.transactions.length>40)
@@ -268,13 +265,7 @@ class App extends Component {
         }
         // this.transactions = count;
     }
-    best_Block() {
-        setInterval(() => {
-            this.setState({
-                best_block: Math.trunc(Math.random() * (5019999 - 5019000) + 5019000)
-            });
-        }, 5000);
-    }
+
     last_Block() {
         setInterval(() => {
            this.setState({
@@ -348,7 +339,7 @@ class App extends Component {
                             <div className="pull-left icon tc-red"><i className="fa fa-puzzle-piece fa-4x"></i></div>
                             <div className="info">
                                 <span className="title">difficulty</span>
-                                <span className="value tc-red">{this.state.dificulty} H</span>
+                                <span className="value tc-red dificulty">{this.state.dificulty} H</span>
                             </div>
                         </div>
                     </div>
@@ -438,11 +429,11 @@ class App extends Component {
 
                     <div className="box" >
                         <span class="title2">last blocks miners</span>
-                        <div class="small-title-miner ng-binding">{this.state.miners[0]}</div>
+                        <div class="small-title-miner ng-binding minners">{this.state.miners[0]}</div>
                         <div blocks="14">
                         <div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div>
                         </div>
-                        <div class="small-title-miner ng-binding">{this.state.miners[1]}</div>
+                        <div class="small-title-miner ng-binding minners">{this.state.miners[1]}</div>
                        <div blocks="14">
                            <div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div>
                        </div>
@@ -453,7 +444,6 @@ class App extends Component {
                 </div>
                 <div className="row">
                     <Servers servers={this.state.servers}/>
-
                 </div>
             </div>
 

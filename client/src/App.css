@@ -109,3 +109,14 @@ span.title2 {
     max-width: 100%;
     margin-bottom: 22px;
 }
+
+.dificulty {
+    font-size: 30px;
+}
+
+.minners {
+    overflow-wrap: break-word;
+    height: auto;
+    /* text-overflow: ellipsis; */
+
+}

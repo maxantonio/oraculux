@@ -15,26 +15,30 @@ import (
 	"net"
 )
 type Server struct{
-	socket     *websocket.Conn
-	ServerInfo *ServerInfo
-	rpc        *ethrpc.EthRPC
-	last_block int
-	last_peers int
+	socket        *websocket.Conn
+	ServerInfo    *ServerInfo
+	rpc           *ethrpc.EthRPC
+	last_block    int
+	last_peers    int
+	pendingFilter string
 }
 type ServerInfo struct{
-	Server      string
-	Sincing     *ethrpc.Syncing
-	Block       *ethrpc.Block
-	BlockNumber int
-	Peers       int
-	IsMining    bool
-	Err         error
+	Server       string
+	Sincing      *ethrpc.Syncing
+	Block        *ethrpc.Block
+	BlockNumber  int
+	Peers        int
+	IsMining     bool
+	Transactions int
+	Pending      int
+	Err          error
 }
 
 func (s *Server) write() {
 
 	s.ServerInfo.Sincing,s.ServerInfo.Err = s.rpc.EthSyncing()
 	s.ServerInfo.BlockNumber,s.ServerInfo.Err = s.rpc.EthBlockNumber()
+
 	if(s.ServerInfo.Err!=nil){
 
 	}else{
@@ -45,6 +49,8 @@ func (s *Server) write() {
 		}
 		s.ServerInfo.Block,s.ServerInfo.Err = s.rpc.EthGetBlockByNumber(s.ServerInfo.BlockNumber,false)
 		s.ServerInfo.Peers,s.ServerInfo.Err = s.rpc.NetPeerCount()
+		s.ServerInfo.Transactions, s.ServerInfo.Err = s.rpc.EthGetBlockTransactionCountByNumber(s.ServerInfo.BlockNumber)
+
 	}
 	fmt.Println("Info  pedido de envio")
 	if (s.ServerInfo.BlockNumber > s.last_block || s.ServerInfo.Peers != s.last_peers) {
@@ -114,5 +120,7 @@ func main() {
 		last_block: 0,
 		last_peers: 0,
 	}
+
+	server.pendingFilter, _ = server.rpc.EthNewPendingTransactionFilter()
 	server.start()
 }

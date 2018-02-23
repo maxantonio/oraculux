@@ -50,13 +50,15 @@ type Server struct{
 	send chan ServerInfo
 }
 type ServerInfo struct{
-	Server      string
-	Sincing     *ethrpc.Syncing
-	Block       *ethrpc.Block
-	BlockNumber int
-	Peers       int
-	IsMining    bool
-	Err         error
+	Server       string
+	Sincing      *ethrpc.Syncing
+	Block        *ethrpc.Block
+	BlockNumber  int
+	Peers        int
+	IsMining     bool
+	Transactions int
+	Pending      int
+	Err          error
 }
 
 //para cuando un usuario se conecta
@@ -299,7 +301,7 @@ func (c *Client) write() {
 	defer func() {
 		c.ws.Close()
 	}()
-	ticker := time.NewTicker(10*time.Second)
+	ticker := time.NewTicker(2 * time.Second)
 	emisora := FirstValues["eth1"]
 	fmt.Println("iniciado write")
 	ethclient := ethrpc.New("http://127.0.0.1:8545")
