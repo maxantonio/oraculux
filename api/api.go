@@ -5,6 +5,7 @@ import (
 	"time"
 	"github.com/gorilla/websocket"
 	"github.com/onrik/ethrpc"
+
 	//"github.com/Pallinder/go-randomdata"
 	//"github.com/Pallinder/go-randomdata"
 	"flag"
@@ -13,6 +14,8 @@ import (
 	"net/url"
 	"os/signal"
 	"net"
+	"errors"
+	"strconv"
 )
 type Server struct{
 	socket        *websocket.Conn
@@ -22,6 +25,7 @@ type Server struct{
 	last_peers    int
 	pendingFilter string
 	eth_coinbase  string
+	pongCh        chan struct{}
 }
 type ServerInfo struct{
 	Server       string
@@ -32,6 +36,8 @@ type ServerInfo struct{
 	IsMining     bool
 	Transactions int
 	Pending      int
+	Ping         string
+	Latency      string
 	Err          error
 }
 
@@ -48,8 +54,10 @@ func (s *Server) write() {
 				s.ServerInfo.BlockNumber = s.ServerInfo.Sincing.CurrentBlock
 			}
 		}
+		s.rpc.NetListening()
 		s.ServerInfo.Block,s.ServerInfo.Err = s.rpc.EthGetBlockByNumber(s.ServerInfo.BlockNumber,false)
 		s.ServerInfo.Peers,s.ServerInfo.Err = s.rpc.NetPeerCount()
+		s.ServerInfo.IsMining, s.ServerInfo.Err = s.rpc.EthMining()
 		s.ServerInfo.Pending, s.ServerInfo.Err = s.rpc.EthGetTransactionCount(s.eth_coinbase, "pending")
 		s.ServerInfo.Transactions, s.ServerInfo.Err = s.rpc.EthGetBlockTransactionCountByNumber(s.ServerInfo.BlockNumber)
 
@@ -62,24 +70,64 @@ func (s *Server) write() {
 	}
 	s.last_block = s.ServerInfo.BlockNumber
 	s.last_peers = s.ServerInfo.Peers
-
-
 }
 
 var addr = flag.String("addr", "localhost:80", "http service address")
 
 func (server *Server) start() {
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
+	go server.read()
+	ticker := time.NewTicker(4 * time.Second)
 
+	defer ticker.Stop()
 	for {
 		select {
 		case t := <-ticker.C:
 			fmt.Print(t.String())
+			server.reportLatency()
 			server.write()
+
 		}
 	}
 }
+func (s *Server) read() {
+	for {
+		_, _, err := s.socket.ReadMessage()
+		if err == nil {
+			select {
+			case s.pongCh <- struct{}{}:
+				// Pong delivered, continue listening
+				continue
+			default:
+				// Ping routine dead, abort
+				fmt.Println("Stats server se murio")
+				return
+			}
+		}
+	}
+}
+
+func (s *Server) reportLatency() error {
+	// Send the current time to the ethstats server
+	start := time.Now()
+
+	infoping := *s.ServerInfo
+	infoping.Ping = start.String()
+	if err := s.socket.WriteJSON(infoping); err != nil {
+		return err
+	}
+	// Wait for the pong request to arrive back
+	select {
+	case <-s.pongCh:
+		// Pong delivered, report the latency
+	case <-time.After(5 * time.Second):
+		// Ping timeout, abort
+		return errors.New("ping timed out")
+	}
+	latency := strconv.Itoa(int((time.Since(start) / time.Duration(2)).Nanoseconds() / 1000000))
+	s.ServerInfo.Latency = latency
+	return s.socket.WriteJSON(s.ServerInfo)
+}
+
 func main() {
 	flag.Parse()
 	log.SetFlags(0)
@@ -114,6 +162,7 @@ func main() {
 	}
 	serverInfo := &ServerInfo{
 		Server: ip.String(),
+		Ping:   "",
 	}
 	base, _ := ethclient.EthCoinbase()
 	server := &Server{
@@ -123,6 +172,7 @@ func main() {
 		last_block:   0,
 		last_peers:   0,
 		eth_coinbase: base,
+		pongCh:       make(chan struct{}),
 	}
 
 	server.pendingFilter, _ = server.rpc.EthNewPendingTransactionFilter()

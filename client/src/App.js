@@ -75,7 +75,7 @@ class App extends Component {
         var finded = false;
         for (var i = 0; i < serversOld.length; i++) {
             var server = serversOld[i];
-            if (server.Server == data.Server) {
+            if (server.Server === data.Server) {
                 server = data;
                 finded = true;
             }
