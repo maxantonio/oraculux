@@ -59,6 +59,7 @@ type ServerInfo struct{
 	Transactions int
 	Pending      int
 	Ping         string
+	Latency      string
 	Err          error
 }
 
