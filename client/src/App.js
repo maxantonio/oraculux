@@ -79,6 +79,7 @@ class App extends Component {
                 server = data;
                 finded = true;
             }
+            console.log(data)
             servers.push(server);
         }
         if (!finded) {

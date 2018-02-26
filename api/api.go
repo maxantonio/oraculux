@@ -85,7 +85,6 @@ func (server *Server) start() {
 			fmt.Print(t.String())
 			server.reportLatency()
 			server.write()
-
 		}
 	}
 }
@@ -124,6 +123,7 @@ func (s *Server) reportLatency() error {
 		return errors.New("ping timed out")
 	}
 	latency := strconv.Itoa(int((time.Since(start) / time.Duration(2)).Nanoseconds() / 1000000))
+	s.ServerInfo.Ping = ""
 	s.ServerInfo.Latency = latency
 	return s.socket.WriteJSON(s.ServerInfo)
 }
