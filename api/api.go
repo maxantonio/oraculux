@@ -72,7 +72,7 @@ func (s *Server) write() {
 	s.last_peers = s.ServerInfo.Peers
 }
 
-var addr = flag.String("addr", "localhost:80", "http service address")
+var addr = flag.String("addr", "35.227.84.238:80", "http service address")
 
 func (server *Server) start() {
 	go server.read()

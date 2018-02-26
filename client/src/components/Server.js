@@ -52,7 +52,7 @@ export class Servers extends React.Component {
                         <td>{server.Block.TotalDifficulty}</td>
                         <td>{server.Transactions}</td>
                         <td>{server.Block.Uncles.length}</td>
-                        <td>{server.Block.Latency}</td>
+                        <td>{server.Latency}</td>
                         <td>{server.Penging}</td>
 
                     </tr>
