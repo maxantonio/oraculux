@@ -9,7 +9,6 @@ import (
 	//"github.com/Pallinder/go-randomdata"
 	//"github.com/Pallinder/go-randomdata"
 	"encoding/json"
-	"database/sql/driver"
 )
 var dummy = false
 var upgrader = websocket.Upgrader{
