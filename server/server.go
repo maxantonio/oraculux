@@ -339,6 +339,7 @@ func (s *Server) read() {
 	for {
 		_, message, err := s.ws.ReadMessage()
 		data := &ServerInfo{}
+		fmt.Println(string(message[:]))
 		err2 := json.Unmarshal(message, data)
 		if (err2 != nil) {
 			fmt.Println(err2)

@@ -111,6 +111,7 @@ func (s *Server) reportLatency() error {
 	infoping := *s.ServerInfo
 	infoping.Ping = start.String()
 	if err := s.socket.WriteJSON(infoping); err != nil {
+		fmt.Println(err)
 		return err
 	}
 	// Wait for the pong request to arrive back
@@ -145,9 +146,11 @@ func main() {
 	if err != nil {
 		log.Fatal("dial:", err)
 	}
+	fmt.Println(err)
 	defer c.Close()
 	if *servername == "" {
 		ifaces, err := net.Interfaces()
+		fmt.Println(err)
 		if err == nil {
 			var ip net.IP
 			for _, i := range ifaces {
