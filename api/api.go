@@ -134,8 +134,11 @@ var rpcurl = flag.String("rpc", "http://127.0.0.1:8545", "nombre a mostrar del s
 func main() {
 
 	flag.Parse()
-	log.SetFlags(0)
+	log.SetFlags(3)
+
 	fmt.Println(*addr)
+	fmt.Println(*servername)
+	fmt.Println(*rpcurl)
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
