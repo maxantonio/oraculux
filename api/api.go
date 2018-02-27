@@ -72,7 +72,6 @@ func (s *Server) write() {
 	s.last_peers = s.ServerInfo.Peers
 }
 
-var addr = flag.String("addr", "35.227.84.238:80", "http service address")
 
 func (server *Server) start() {
 	go server.read()
@@ -122,46 +121,67 @@ func (s *Server) reportLatency() error {
 		// Ping timeout, abort
 		return errors.New("ping timed out")
 	}
-	latency := strconv.Itoa(int((time.Since(start) / time.Duration(2)).Nanoseconds() / 1000000))
+	latency := strconv.Itoa(int((time.Since(start) / time.Duration(2)).Nanoseconds() / 100000))
 	s.ServerInfo.Ping = ""
 	s.ServerInfo.Latency = latency
 	return s.socket.WriteJSON(s.ServerInfo)
 }
 
+var addr = flag.String("addr", "35.227.84.238:80", "http service address")
+
 func main() {
 	flag.Parse()
 	log.SetFlags(0)
-
+	servername := ""
+	rpcurl := "http://127.0.0.1:8545"
+	if (len(os.Args) > 1) {
+		pos := 0
+		for _, arg := range os.Args {
+			pos += 1
+			switch string(arg) {
+			case "-rpc":
+				rpcurl = os.Args[pos]
+			case "-name":
+				servername = os.Args[pos]
+			case "-stat":
+				addr = flag.String("addr", os.Args[pos], "http service addres") //carga la configuracion en el path especificado por parametro
+			}
+		}
+	}
+	fmt.Println(*addr)
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
 	u := url.URL{Scheme: "ws", Host: *addr, Path: "/api"}
 	log.Printf("connecting to %s", u.String())
-	ethclient := ethrpc.New("http://127.0.0.1:8545")//conectando al rpc local
+	ethclient := ethrpc.New(rpcurl) //conectando al rpc local
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
 		log.Fatal("dial:", err)
 	}
 	defer c.Close()
-	ifaces, err := net.Interfaces()
-	var ip net.IP
-	for _, i := range ifaces {
-		addrs, _ := i.Addrs()
-		// handle err
-		for _, addr := range addrs {
+	if servername == "" {
+		ifaces, err := net.Interfaces()
+		if err == nil {
+			var ip net.IP
+			for _, i := range ifaces {
+				addrs, _ := i.Addrs()
+				// handle err
+				for _, addr := range addrs {
 
-			switch v := addr.(type) {
-			case *net.IPNet:
-				ip = v.IP
-			case *net.IPAddr:
-				ip = v.IP
+					switch v := addr.(type) {
+					case *net.IPNet:
+						ip = v.IP
+					case *net.IPAddr:
+						ip = v.IP
+					}
+				}
 			}
-
-			// process IP address
+			servername = ip.String()
 		}
 	}
 	serverInfo := &ServerInfo{
-		Server: ip.String(),
+		Server: servername,
 		Ping:   "",
 	}
 	base, _ := ethclient.EthCoinbase()

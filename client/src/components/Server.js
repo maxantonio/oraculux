@@ -45,7 +45,7 @@ export class Servers extends React.Component {
                     <tr>
                         <td>{server.Server}</td>
                         <td>{server.IsMining ? "X" : "No"}</td>
-                        {server.Sincing != null && <td>{server.Sincing.IsSyncing ? "X" : "No"}</td>}
+                        {server.Sincing != null ? <td>{server.Sincing.IsSyncing ? "X" : "No"}</td> : <td>No</td>}
                         <td>{server.Peers}</td>
                         <td>{server.BlockNumber}</td>
                         {server.Block != null && <td>{server.Block.Miner}</td>}
