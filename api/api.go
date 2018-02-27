@@ -130,8 +130,7 @@ func (s *Server) reportLatency() error {
 var addr = flag.String("addr", "35.227.84.238:80", "http service address")
 
 func main() {
-	flag.Parse()
-	log.SetFlags(0)
+
 	servername := ""
 	rpcurl := "http://127.0.0.1:8545"
 	if (len(os.Args) > 1) {
@@ -148,6 +147,8 @@ func main() {
 			}
 		}
 	}
+	flag.Parse()
+	log.SetFlags(0)
 	fmt.Println(*addr)
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
