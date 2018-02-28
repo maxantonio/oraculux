@@ -129,29 +129,29 @@ func (s *Server) reportLatency() error {
 }
 
 var addr = flag.String("addr", "35.227.84.238:80", "http service address")
-var servername = flag.String("name", "", "nombre a mostrar del servidor")
-var rpcurl = flag.String("rpc", "http://127.0.0.1:8545", "nombre a mostrar del servidor")
+var name = flag.String("name", "", "nombre a mostrar del servidor")
+var rpc = flag.String("rpc", "http://localhost:8545", "nombre a mostrar del servidor")
 func main() {
 
 	flag.Parse()
 	log.SetFlags(3)
 
 	fmt.Println(*addr)
-	fmt.Println(*servername)
-	fmt.Println(*rpcurl)
+	fmt.Println(*name)
+	fmt.Println(*rpc)
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
 	u := url.URL{Scheme: "ws", Host: *addr, Path: "/api"}
 	log.Printf("connecting to %s", u.String())
-	ethclient := ethrpc.New(*rpcurl) //conectando al rpc local
+	ethclient := ethrpc.New(*rpc) //conectando al rpc local
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
 		log.Fatal("dial:", err)
 	}
 	fmt.Println(err)
 	defer c.Close()
-	if *servername == "" {
+	if *name == "" {
 		ifaces, err := net.Interfaces()
 		fmt.Println(err)
 		if err == nil {
@@ -169,11 +169,11 @@ func main() {
 					}
 				}
 			}
-			*servername = ip.String()
+			*name = ip.String()
 		}
 	}
 	serverInfo := &ServerInfo{
-		Server: *servername,
+		Server: *name,
 		Ping:   "",
 	}
 	base, _ := ethclient.EthCoinbase()
