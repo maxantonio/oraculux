@@ -80,7 +80,7 @@ class App extends Component {
                     this.setGasLimit(data.Block.GasLimit)
                     this.setDificulties(data.Block.Difficulty);
                     console.log("data del uncle");
-                    this.addUncle(data.Block.Uncles.length, data.Block.BlockNumber);
+                    this.addUncle(data.Block.Uncles.length, data.Block.Number);
                     this.setState({
                         miners: newminers,
                         dificulty: data.Block.Difficulty,
