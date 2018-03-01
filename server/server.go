@@ -160,8 +160,8 @@ func (h *Hub) start() {
 				select {
 				case client.sendServer <- message:
 				default:
-					close(client.sendServer)
-					delete(h.clients, client)
+					//close(client.sendServer)
+					//delete(h.clients, client)
 				}
 			}
 		}
@@ -173,6 +173,7 @@ func (c *Client) writeServers(){
 	for {
 		select {
 		case message := <-c.sendServer:
+			fmt.Println("RECIBIDA INFO A ENVIAR")
 			fmt.Println(message)
 			c.ws.WriteJSON(message)
 		}
@@ -209,7 +210,7 @@ func (s *Server) read() {
 					Data:      data,
 					Server:    "por definir",
 				}
-				hub.broadcast <- *info
+				go func() { hub.broadcast <- *info }()
 				if (data.BlockNumber > hub.fullInfo.BlockNumber) {
 					hub.fullInfo = data
 				}
