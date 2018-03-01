@@ -81,6 +81,7 @@ class App extends Component {
                     this.setGasUsed(data.Block.GasUsed);
                     this.setGasLimit(data.Block.GasLimit)
                     this.setDificulties(data.Block.Difficulty);
+                    this.addUncle(data.Block.Uncles.length, data.Block.BlockNumber);
                     this.setState({
                         miners: newminers,
                         dificulty: data.Block.Difficulty,
@@ -130,7 +131,6 @@ class App extends Component {
         );
         console.log("DEBIO PROCESAR EL SERVER");
     }
-
     setSyncing(data){
         if(this.state.best_block !== data.CurrentBlock) {
             this.addTime(this.state.last_block,data.CurrentBlock);
