@@ -114,7 +114,7 @@ func (h *Hub) readSelfInfo() {
 					self_block = syncing.CurrentBlock
 				} else {
 					self_block, err = rpc.EthBlockNumber()
-					self_block = h.fullInfo.BlockNumber + 37;
+					//self_block = h.fullInfo.BlockNumber + 37; //para uso local cuando no este online
 				}
 				if (self_block >= h.fullInfo.BlockNumber) {
 					h.fullInfo.BlockNumber = self_block
