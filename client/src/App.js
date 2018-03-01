@@ -11,25 +11,16 @@ class App extends Component {
         super();
         this.uncles = [{name:0,cont:4,fill:"#ccc"}]
         this.transactions = [
-            {name: 0, transactions: 4, fill: "#8884d8"},
-            {name: 0, transactions: 3, fill: "#cc3f2c"},
-            {name: 0, transactions: 5, fill: "#8884d8"},
-            {name: 0, transactions: 2, fill: "#8884d8"},
-            {name: 0, transactions: 5, fill: "#8884d8"},
-            {name: 0, transactions: 1, fill: "#8884d8"},
-            {name: 0, transactions: 1, fill: "#8884d8"},
-            {name: 0, transactions: 1, fill: "#8884d8"},
-            {name: 0, transactions: 1, fill: "#8884d8"},
-            {name: 0, transactions: 1, fill: "#8884d8"},
+            {name: 0, transactions: 0, fill: "#8884d8"}
         ];
 
         this.state = {
             transactions:this.transactions,
-            last_block: 0,
-            times:[{name:0,cont:0,fill:"#ccc"}],
-            avgtime:15,
-            best_block: 0,
-            lastknow_block:0,
+            last_block: 0, //tiempo demorado en obtener el bloque
+            times: [{name: 0, cont: 0, fill: "#ccc"}], //se llena en addTime
+            avgtime: 15, //se calcula en addTime
+            best_block: 0,//el ultimo bloque segun los nodos conectados al stat
+            lastknow_block: 0,//el ultimo bloque cuando esta sincronizandose
             gas_price:0,
             miners:["1","2"],
             dificulty:0,
@@ -49,6 +40,10 @@ class App extends Component {
          this.last_Block();
         var ws = new WebSocket("ws://" + document.location.host + "/ws");
         var self = this;
+        ws.onerror = function (error) {
+            console.log("mensaje de error del websocket");
+            console.log(error);
+        }
         ws.onmessage = function(event) {
             var response = JSON.parse(event.data);
             switch(response.info_type){
@@ -57,6 +52,11 @@ class App extends Component {
                     break;
                 case "Server":
                     self.setServersD(response.data)
+
+                    break;
+                case "FullInfo":
+                    console.log(response)
+                    self.setFullInfo(response.data);
                     break;
                  default:
                     self.setStatus(response.info_type,response.data,response.block);
@@ -65,6 +65,44 @@ class App extends Component {
         }
     }
 
+    setFullInfo(data) {
+        console.log("LLAMANDO A FULLINFO")
+        console.log(data);
+        if (data.BlockNumber > this.state.best_block) {
+            console.log("cambiando estado");
+            this.addTime(this.state.last_block, data.BlockNumber);
+            this.addTransactions(data.Transactions, data.BlockNumber)
+            if (data.Block != null) {
+
+                if (data.Block.Number > this.state.best_block) {
+                    var newminers = [];
+                    newminers.push(this.state.miners[1]);
+                    newminers.push(data.Block.Miner);
+                    this.setGasUsed(data.Block.GasUsed);
+                    this.setGasLimit(data.Block.GasLimit)
+                    this.setDificulties(data.Block.Difficulty);
+                    this.setState({
+                        miners: newminers,
+                        dificulty: data.Block.Difficulty,
+                        totalDificulty: data.Block.TotalDifficulty,
+                        gasLimit: data.Block.GasLimit,
+                    })
+                }
+            }
+            this.setState({
+                best_block: data.BlockNumber,
+                gas_price: data.GasPrice,
+                hash_rate: data.HashRate,
+                peers: data.Peers,
+                last_block: 0
+            });
+            if (data.Sincing.IsSyncing) {
+                this.setState({
+                    lastknow_block: data.Sincing.HighestBlock,
+                });
+            }
+        }
+    }
     setServersD(data) {
         console.log("ESTAMOS PROCESANDO UNSERVER")
         console.log(this.state);
@@ -92,15 +130,7 @@ class App extends Component {
         );
         console.log("DEBIO PROCESAR EL SERVER");
     }
-    setBlock(data){
-        if(this.state.best_block !== data) {
-            this.addTime(this.state.last_block,data);
-            this.setState({
-                best_block: data,
-                last_block: 0
-            });
-        }
-    }
+
     setSyncing(data){
         if(this.state.best_block !== data.CurrentBlock) {
             this.addTime(this.state.last_block,data.CurrentBlock);
@@ -251,6 +281,7 @@ class App extends Component {
     }
     addTransactions(count,block){
         //AQUI ES NECESARIO
+        console.log("ADICIONANDO TRANSACCIONES", count, block, this.transactions[this.transactions.length - 1].name);
         if (block > this.transactions[this.transactions.length - 1].name) {
             console.log(block," > ",this.transactions[this.transactions.length-1].name)
             var trans = [];
@@ -396,6 +427,7 @@ class App extends Component {
                         <span className="title2">Uncles</span>
                         <BarChart width={280} height={80}  data={this.state.uncles} bind>
                             <Bar dataKey='cont' fillKey='fill'  />
+                            <Tooltip/>
                         </BarChart>
                     </div>
                     <div className="box">
@@ -425,6 +457,7 @@ class App extends Component {
                         <span className="title2">GAS LIMIT</span>
                         <BarChart width={280} height={80}  data={this.state.gasLimitList} bind>
                             <Bar dataKey='cont' fillKey='fill'  />
+                            <Tooltip/>
                         </BarChart>
                     </div>
 

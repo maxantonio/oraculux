@@ -55,16 +55,11 @@ type ServerInfo struct{
 //para cuando un usuario se conecta
 type Client struct {
 	ws         *websocket.Conn
-	send       chan SocketInfo
 	sendServer chan SocketInfo
 	subs       []string
 }
 
-//info de server constante con la info mas actualizada a mostrar almacenada en hub
-type FullInfo struct {
-	server    ServerInfo
-	lastBlock int
-}
+
 
 //estructura encargada de gestionar los clientes web y las api de informacion
 type Hub struct {
@@ -75,7 +70,7 @@ type Hub struct {
 	removeClient chan *Client
 	addServer    chan *Server
 	removeServer chan *Server
-	fullInfo     *FullInfo
+	fullInfo     *ServerInfo
 }
 
 //instancia unica del hub
@@ -87,15 +82,15 @@ var hub = Hub{
 	removeServer: make(chan *Server),
 	clients:      make(map[*Client]bool),
 	servers:      make(map[*Server]bool),
-	fullInfo: &FullInfo{
-		server:    *&ServerInfo{},
-		lastBlock: 0,
+	fullInfo: &ServerInfo{
+		Ping: "",
 	},
 }
 //metodo encargado de obtener informacion del servidor local
 func (h *Hub) readSelfInfo() {
 	ticker := time.NewTicker(2 * time.Second)
 	rpc := ethrpc.New(*selfserver)
+	fmt.Println("INICIALIZANDO TIMER HUB")
 	for {
 		select {
 		case <-ticker.C:
@@ -110,30 +105,37 @@ func (h *Hub) readSelfInfo() {
 					continue
 				}
 				if hashRate != 0 {
-					h.fullInfo.server.HashRate = hashRate
+					h.fullInfo.HashRate = hashRate
 				}
 				syncing, _ := rpc.EthSyncing()
 				self_block := 0
-				h.fullInfo.server.Sincing = syncing
+				h.fullInfo.Sincing = syncing
 				if (syncing.IsSyncing) {
 					self_block = syncing.CurrentBlock
 				} else {
 					self_block, err = rpc.EthBlockNumber()
+					self_block = h.fullInfo.BlockNumber + 37;
 				}
-				if (self_block > h.fullInfo.lastBlock) {
-					h.fullInfo.server.uncles, _ = rpc.EthGetUncleCountByBlockNumber(self_block)
-					h.fullInfo.server.Transactions, _ = rpc.EthGetBlockTransactionCountByNumber(self_block)
-					h.fullInfo.server.Block, _ = rpc.EthGetBlockByNumber(self_block, false)
+				if (self_block >= h.fullInfo.BlockNumber) {
+					h.fullInfo.BlockNumber = self_block
+					h.fullInfo.uncles, _ = rpc.EthGetUncleCountByBlockNumber(self_block)
+					fmt.Println("calculando transacciones de:")
+					fmt.Println(self_block)
+					h.fullInfo.Transactions, _ = rpc.EthGetBlockTransactionCountByNumber(self_block)
+					fmt.Println(h.fullInfo.Transactions)
+					h.fullInfo.Block, _ = rpc.EthGetBlockByNumber(self_block, false)
 				}
-				h.fullInfo.server.Peers, _ = rpc.NetPeerCount()
-				h.fullInfo.server.GasPrice, _ = rpc.EthGasPrice()
+				h.fullInfo.Peers, _ = rpc.NetPeerCount()
+				h.fullInfo.GasPrice, _ = rpc.EthGasPrice()
+
+
+
 				info_to_send := &SocketInfo{
 					Info_type: "FullInfo",
 					Data:      h.fullInfo,
-					Server:    "self",
+					Server:    "selfi",
 				}
 				h.broadcast <- *info_to_send
-				fmt.Println("Info  pedido")
 			}
 		}
 	}
@@ -158,7 +160,7 @@ func (h *Hub) start() {
 		case conn := <-h.removeClient:
 			if _, ok := h.clients[conn]; ok {
 				delete(h.clients, conn)
-				close(conn.send)
+				close(conn.sendServer)
 			}
 
 		case message := <-h.broadcast:
@@ -166,7 +168,6 @@ func (h *Hub) start() {
 				select {
 				case client.sendServer <- message:
 				default:
-
 					close(client.sendServer)
 					delete(h.clients, client)
 				}
@@ -180,6 +181,7 @@ func (c *Client) writeServers(){
 	for {
 		select {
 		case message := <-c.sendServer:
+			fmt.Println(message)
 			c.ws.WriteJSON(message)
 		}
 	}
@@ -214,8 +216,8 @@ func (s *Server) read() {
 					Server:    "por definir",
 				}
 				hub.broadcast <- *info
-				if (data.BlockNumber > hub.fullInfo.lastBlock) {
-					hub.fullInfo.server = *data
+				if (data.BlockNumber > hub.fullInfo.BlockNumber) {
+					hub.fullInfo = data
 				}
 				Fullinfo := &SocketInfo{
 					Info_type: "FullInfo",
@@ -240,7 +242,6 @@ func wsIndex(res http.ResponseWriter, req *http.Request){
 
 	client := &Client{
 		ws:         conn,
-		send:       make(chan SocketInfo),
 		sendServer: make(chan SocketInfo),
 		subs:       []string{},
 	}
@@ -274,6 +275,7 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, urlfile)
 	}
 
+// fariables que se pueden recibir por parametros
 var mode = flag.String("mode", "merge", "modo del servidor(self,soloapi,merge[default]")
 var selfserver = flag.String("selfserver", "http://127.0.0.1:8545", "direccion servidor rpc de la info propia del stat")
 

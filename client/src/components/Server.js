@@ -14,19 +14,15 @@ export class Servers extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        console.log("SE LLAMA WILLRECEIVprops ")
-        // Can use shallowEquals() helper here to avoid comparing every prop
-        // if (this.props.servers !== nextProps.servers) {
         this.setState({
             servers: nextProps.servers
         });
-        // }
     }
 
     render() {
         var serv = this.state.servers
         return (
-            <table className="full-table">
+            <table className="table bg-white table-hover">
                 <thead>
                 <th>Server</th>
                 <th>IsMining</th>
