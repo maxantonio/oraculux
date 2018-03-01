@@ -94,11 +94,6 @@ func (h *Hub) readSelfInfo() {
 	for {
 		select {
 		case <-ticker.C:
-			if (dummy) {
-				//go func() { c.send <- Hub.GetFake() }()
-				fmt.Println("Fake pedido")
-			} else {
-
 				hashRate, err := rpc.EthHashrate()
 				if (err != nil) {
 					fmt.Println(err)
@@ -127,9 +122,6 @@ func (h *Hub) readSelfInfo() {
 				}
 				h.fullInfo.Peers, _ = rpc.NetPeerCount()
 				h.fullInfo.GasPrice, _ = rpc.EthGasPrice()
-
-
-
 				info_to_send := &SocketInfo{
 					Info_type: "FullInfo",
 					Data:      h.fullInfo,
@@ -139,7 +131,7 @@ func (h *Hub) readSelfInfo() {
 			}
 		}
 	}
-}
+
 
 //administracion de los canales de comunicacion de los clientes y los servidores
 func (h *Hub) start() {
@@ -196,11 +188,12 @@ func (s *Server) read() {
 	for {
 		_, message, err := s.ws.ReadMessage()
 		data := &ServerInfo{}
-
+		fmt.Println("mensaje recibido de servidor")
 		fmt.Println(string(message[:]))
 		err2 := json.Unmarshal(message, data)
 
 		if (err2 != nil) {
+			fmt.Println("ERROR RECIBIENDO")
 			fmt.Println(err2)
 		} else {
 			if data.Ping != "" {
@@ -209,6 +202,7 @@ func (s *Server) read() {
 				fmt.Println(data)
 				s.ws.WriteJSON(data)
 			} else {
+				fmt.Println("RECIBIDA INFORMACION DE SERVIDOR")
 
 				info := &SocketInfo{
 					Info_type: "Server",
