@@ -9,7 +9,7 @@ class App extends Component {
 
     constructor() {
         super();
-        this.uncles = [{name:0,cont:4,fill:"#ccc"}]
+        this.uncles = [{name: 0, cont: 0, fill: "#ccc"}]
         this.transactions = [
             {name: 0, transactions: 0, fill: "#8884d8"}
         ];
@@ -67,9 +67,7 @@ class App extends Component {
 
     setFullInfo(data) {
         console.log("LLAMANDO A FULLINFO")
-        console.log(data);
         if (data.BlockNumber > this.state.best_block) {
-            console.log("cambiando estado");
             this.addTime(this.state.last_block, data.BlockNumber);
             this.addTransactions(data.Transactions, data.BlockNumber)
             if (data.Block != null) {
@@ -81,6 +79,7 @@ class App extends Component {
                     this.setGasUsed(data.Block.GasUsed);
                     this.setGasLimit(data.Block.GasLimit)
                     this.setDificulties(data.Block.Difficulty);
+                    console.log("data del uncle");
                     this.addUncle(data.Block.Uncles.length, data.Block.BlockNumber);
                     this.setState({
                         miners: newminers,
@@ -263,7 +262,9 @@ class App extends Component {
             });
     }
     addUncle(count,block){
+        console.log("procesando uncles", count, block);
         if (this.uncles.length === 0 || block > this.uncles[this.uncles.length - 1].name) {
+            console.log("entro al if de uncles", count, block);
             var nuevo = {name: block, cont: count, fill: this.getTransFill(count)}
             this.uncles.push(nuevo);
             if(this.uncles.length>50)
@@ -276,7 +277,9 @@ class App extends Component {
             for(var i in temp) {
                 result += temp[i].cont;
             }
+            console.log("entro al if de uncles", count, block);
             this.setState({ uncles:temp,uncle_50:result,uncle_val:nuevo.cont});
+            console.log("seteado los uncles", this.state);
         }
     }
     addTransactions(count,block){
