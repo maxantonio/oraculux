@@ -18,69 +18,65 @@ import (
 	"strconv"
 	"encoding/json"
 )
+import (
+	"../comon"
+)
+
+//objeto del servidor actual
 type Server struct{
-	socket        *websocket.Conn
-	ServerInfo    *ServerInfo
-	rpc           *ethrpc.EthRPC
-	last_block    int
-	last_peers    int
-	pendingFilter string
-	eth_coinbase  string
-	pongCh        chan struct{}
-}
-type PoolStatus struct {
-	pending int
-	queued  int
+	socket        *websocket.Conn   //coneccion establecida con el stat
+	ServerInfo    *comon.ServerInfo //informacion que se envia al stat
+	rpc           *ethrpc.EthRPC    //conexion RPC con el geth
+	last_block    int               //bandera de validacion para saber si ha cambiado la informacion
+	last_peers    int               //bandera de validacion para saber si ha cambiado la informacion
+	pendingFilter string            //bandera de validacion para saber si ha cambiado la informacion
+	eth_coinbase  string            //addres del servidor actual
+	atempts       int               //intentos de obtencion de informacion por rpc
+	down          int               //intentos fallidos de obtencion de informacion por rpc
+	pongCh        chan struct{}     //respuesta de la informacion cuando se da ping para calcular latencia
 }
 
-type ServerInfo struct{
-	Server       string
-	Sincing      *ethrpc.Syncing
-	Block        *ethrpc.Block
-	BlockNumber  int
-	Peers        int
-	IsMining     bool
-	Transactions int
-	Pending      int
-	Ping         string
-	Latency      string
-	Err          error
-}
-
+//mandando informacion del nodo actual al servidor
 func (s *Server) write() {
-
+	//obtengo el bloque actual por sincronizacion y el conocido
 	s.ServerInfo.Sincing,s.ServerInfo.Err = s.rpc.EthSyncing()
 	s.ServerInfo.BlockNumber,s.ServerInfo.Err = s.rpc.EthBlockNumber()
+	s.atempts += 1 //incremento contador de intentos de obtencion de informacion
 
 	if(s.ServerInfo.Err!=nil){
-
+		s.down += 1 //si da error aunmento el contador de peticiones fallidas
 	}else{
-		if(s.ServerInfo.Sincing.IsSyncing){
+		if (s.ServerInfo.Sincing.IsSyncing) { //verificamos si esta sincronizando
+			//validamos si la info de sincronizcion es mas actualizada que el bloque registrado por el nodo
 			if(s.ServerInfo.Sincing.CurrentBlock>s.ServerInfo.BlockNumber){
-				s.ServerInfo.BlockNumber = s.ServerInfo.Sincing.CurrentBlock
+				s.ServerInfo.BlockNumber = s.ServerInfo.Sincing.CurrentBlock //registramos el bloque mas actual del servidor
 			}
 		}
-		s.rpc.NetListening()
-		s.ServerInfo.Block,s.ServerInfo.Err = s.rpc.EthGetBlockByNumber(s.ServerInfo.BlockNumber,false)
-		s.ServerInfo.Peers,s.ServerInfo.Err = s.rpc.NetPeerCount()
-		s.ServerInfo.IsMining, s.ServerInfo.Err = s.rpc.EthMining()
-		s.ServerInfo.Pending, s.ServerInfo.Err = s.rpc.EthGetTransactionCount(s.eth_coinbase, "pending")
+		//obtenemos informacion del servidor
+		s.ServerInfo.Block, s.ServerInfo.Err = s.rpc.EthGetBlockByNumber(s.ServerInfo.BlockNumber, false)     //bloque con su informacion de obtencion:(minero,dificultad etc..)
+		s.ServerInfo.Peers, s.ServerInfo.Err = s.rpc.NetPeerCount()                                           //nodos conectados con los que se sincroniza
+		s.ServerInfo.IsMining, s.ServerInfo.Err = s.rpc.EthMining()                                           //si esta minando o no
+		s.ServerInfo.LocalPending, s.ServerInfo.Err = s.rpc.EthGetTransactionCount(s.eth_coinbase, "pending") //transacciones pendientes locales
 		fmt.Println("respuesta de txpool")
-		response1, err1 := s.rpc.Call("txpool_status")
-		data := &PoolStatus{}
+		response1, _ := s.rpc.Call("txpool_status")
+		data := &comon.PoolStatus{}
 		json.Unmarshal(response1, data)
-		fmt.Println(response1)
-		fmt.Println(data)
-		fmt.Println(err1)
-
+		s.ServerInfo.Pending = data
 		s.ServerInfo.Transactions, s.ServerInfo.Err = s.rpc.EthGetBlockTransactionCountByNumber(s.ServerInfo.BlockNumber)
-
 	}
-	fmt.Println("Info  pedido de envio")
+	//cal
+	uptimes := s.atempts - s.down
+	s.ServerInfo.UpTime = uptimes * 100 / s.atempts
 	if (s.ServerInfo.BlockNumber > s.last_block || s.ServerInfo.Peers != s.last_peers) {
 		s.socket.WriteJSON(s.ServerInfo)
 		fmt.Print(s.ServerInfo.BlockNumber)
 		fmt.Println("Info  Enviada")
+	} else {
+		if (s.ServerInfo.UpTime < 100) {
+			s.socket.WriteJSON(s.ServerInfo)
+			fmt.Print(s.ServerInfo.BlockNumber)
+			fmt.Println("")
+		}
 	}
 	s.last_block = s.ServerInfo.BlockNumber
 	s.last_peers = s.ServerInfo.Peers
@@ -186,7 +182,7 @@ func main() {
 			*name = ip.String()
 		}
 	}
-	serverInfo := &ServerInfo{
+	serverInfo := &comon.ServerInfo{
 		Server: *name,
 		Ping:   "",
 	}

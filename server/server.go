@@ -9,9 +9,9 @@ import (
 	//"github.com/Pallinder/go-randomdata"
 	//"github.com/Pallinder/go-randomdata"
 	"encoding/json"
-	"math/big"
 	"flag"
 )
+import "../comon"
 var dummy = false
 
 var upgrader = websocket.Upgrader{
@@ -31,27 +31,10 @@ type SocketInfo struct {
 //objeto de una conexion con las api
 type Server struct{
 	ws   *websocket.Conn
-	send chan ServerInfo
+	send chan comon.ServerInfo
 }
 
 //para obtener info de una API
-type ServerInfo struct{
-	Server       string
-	Sincing      *ethrpc.Syncing
-	Block        *ethrpc.Block
-	UncleCount   int
-	BlockNumber  int
-	Peers        int
-	IsMining     bool
-	Transactions int
-	Pending      int
-	Ping         string
-	Latency      string
-	HashRate     int
-	GasPrice     big.Int
-	uncles       int
-	Err          error
-}
 
 //para cuando un usuario se conecta
 type Client struct {
@@ -71,7 +54,7 @@ type Hub struct {
 	removeClient chan *Client
 	addServer    chan *Server
 	removeServer chan *Server
-	fullInfo     *ServerInfo
+	fullInfo     *comon.ServerInfo
 }
 
 //instancia unica del hub
@@ -83,7 +66,7 @@ var hub = Hub{
 	removeServer: make(chan *Server),
 	clients:      make(map[*Client]bool),
 	servers:      make(map[*Server]bool),
-	fullInfo: &ServerInfo{
+	fullInfo: &comon.ServerInfo{
 		Ping: "",
 	},
 }
@@ -114,7 +97,7 @@ func (h *Hub) readSelfInfo() {
 				}
 				if (self_block >= h.fullInfo.BlockNumber) {
 					h.fullInfo.BlockNumber = self_block
-					h.fullInfo.uncles, _ = rpc.EthGetUncleCountByBlockNumber(self_block)
+					h.fullInfo.Uncles, _ = rpc.EthGetUncleCountByBlockNumber(self_block)
 					fmt.Println("calculando transacciones de:")
 					fmt.Println(self_block)
 					h.fullInfo.Transactions, _ = rpc.EthGetBlockTransactionCountByNumber(self_block)
@@ -189,7 +172,7 @@ func (s *Server) read() {
 	}()
 	for {
 		_, message, err := s.ws.ReadMessage()
-		data := &ServerInfo{}
+		data := &comon.ServerInfo{}
 		fmt.Println("mensaje recibido de servidor")
 		fmt.Println(string(message[:]))
 		err2 := json.Unmarshal(message, data)
@@ -252,7 +235,7 @@ func wsApi(res http.ResponseWriter, req *http.Request){
 
 	server := &Server{
 		ws:   conn,
-		send: make(chan ServerInfo),
+		send: make(chan comon.ServerInfo),
 	}
 
 	hub.addServer <- server

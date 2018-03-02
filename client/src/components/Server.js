@@ -17,9 +17,11 @@ export class Servers extends React.Component {
         this.setState({
             servers: nextProps.servers
         });
+        console.log(this.state.servers);
     }
 
     render() {
+
         var serv = this.state.servers
         return (
             <table className="table bg-white table-hover">
@@ -49,7 +51,7 @@ export class Servers extends React.Component {
                         <td>{server.Transactions}</td>
                         {server.Block != null && <td>{server.Block.Uncles.length}</td>}
                         <td>{server.Latency}</td>
-                        <td>{server.Penging}</td>
+                        <td>{server.Pending.pending}</td>
 
                     </tr>
                 )}
