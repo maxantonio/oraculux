@@ -39,6 +39,7 @@ type ServerInfo struct{
 	Server       string
 	Sincing      *ethrpc.Syncing
 	Block        *ethrpc.Block
+	UncleCount   int
 	BlockNumber  int
 	Peers        int
 	IsMining     bool

@@ -16,6 +16,7 @@ import (
 	"net"
 	"errors"
 	"strconv"
+	"encoding/json"
 )
 type Server struct{
 	socket        *websocket.Conn
@@ -27,6 +28,11 @@ type Server struct{
 	eth_coinbase  string
 	pongCh        chan struct{}
 }
+type PoolStatus struct {
+	pending int
+	queued  int
+}
+
 type ServerInfo struct{
 	Server       string
 	Sincing      *ethrpc.Syncing
@@ -59,6 +65,14 @@ func (s *Server) write() {
 		s.ServerInfo.Peers,s.ServerInfo.Err = s.rpc.NetPeerCount()
 		s.ServerInfo.IsMining, s.ServerInfo.Err = s.rpc.EthMining()
 		s.ServerInfo.Pending, s.ServerInfo.Err = s.rpc.EthGetTransactionCount(s.eth_coinbase, "pending")
+		fmt.Println("respuesta de txpool")
+		response1, err1 := s.rpc.Call("txpool_status")
+		data := &PoolStatus{}
+		json.Unmarshal(response1, data)
+		fmt.Println(response1)
+		fmt.Println(data)
+		fmt.Println(err1)
+
 		s.ServerInfo.Transactions, s.ServerInfo.Err = s.rpc.EthGetBlockTransactionCountByNumber(s.ServerInfo.BlockNumber)
 
 	}
