@@ -98,14 +98,12 @@ func (h *Hub) readSelfInfo() {
 				if (self_block >= h.fullInfo.BlockNumber) {
 					h.fullInfo.BlockNumber = self_block
 					h.fullInfo.Uncles, _ = rpc.EthGetUncleCountByBlockNumber(self_block)
-					fmt.Println("calculando transacciones de:")
-					fmt.Println(self_block)
 					h.fullInfo.Transactions, _ = rpc.EthGetBlockTransactionCountByNumber(self_block)
-					fmt.Println(h.fullInfo.Transactions)
 					h.fullInfo.Block, _ = rpc.EthGetBlockByNumber(self_block, false)
 				}
 				h.fullInfo.Peers, _ = rpc.NetPeerCount()
-				h.fullInfo.GasPrice, _ = rpc.EthGasPrice()
+			gaspric, _ := rpc.EthGasPrice()
+			h.fullInfo.GasPrice = gaspric.Int64()
 				info_to_send := &SocketInfo{
 					Info_type: "FullInfo",
 					Data:      h.fullInfo,
@@ -163,7 +161,17 @@ func (c *Client) writeServers(){
 		}
 	}
 }
-
+func (h *Hub) sendFullInfo(data *comon.ServerInfo) {
+	if (data.BlockNumber > hub.fullInfo.BlockNumber) {
+		hub.fullInfo = data
+	}
+	Fullinfo := &SocketInfo{
+		Info_type: "FullInfo",
+		Data:      hub.fullInfo,
+		Server:    "por definir",
+	}
+	hub.broadcast <- *Fullinfo
+}
 //proceso de lectura del socket de una instancia de servidor api
 func (s *Server) read() {
 	defer func() {
@@ -195,15 +203,9 @@ func (s *Server) read() {
 					Server:    "por definir",
 				}
 				go func() { hub.broadcast <- *info }()
-				if (data.BlockNumber > hub.fullInfo.BlockNumber) {
-					hub.fullInfo = data
-				}
-				Fullinfo := &SocketInfo{
-					Info_type: "FullInfo",
-					Data:      hub.fullInfo,
-					Server:    "por definir",
-				}
-				hub.broadcast <- *Fullinfo
+				go func() { hub.sendFullInfo(data) }()
+
+
 			}
 		}
 

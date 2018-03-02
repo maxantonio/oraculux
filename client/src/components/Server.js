@@ -17,7 +17,7 @@ export class Servers extends React.Component {
         this.setState({
             servers: nextProps.servers
         });
-        console.log(this.state.servers);
+        console.log(nextProps.servers);
     }
 
     render() {
@@ -50,8 +50,8 @@ export class Servers extends React.Component {
                         {server.Block != null && <td>{server.Block.TotalDifficulty}</td>}
                         <td>{server.Transactions}</td>
                         {server.Block != null && <td>{server.Block.Uncles.length}</td>}
-                        <td>{server.Latency}</td>
-                        <td>{server.Pending.pending}</td>
+                        <td>{server.Latency}{server.Pending.Pending}</td>
+                        <td>{(server.Pending.Pending + server.Pending.Queued).toString()}</td>
 
                     </tr>
                 )}

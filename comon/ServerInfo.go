@@ -2,7 +2,6 @@ package comon
 
 import (
 	"github.com/onrik/ethrpc"
-	"math/big"
 )
 
 type ServerInfo struct {
@@ -19,7 +18,7 @@ type ServerInfo struct {
 	Latency      string
 	HashRate     int
 	Uncles       int
-	GasPrice     big.Int
+	GasPrice     int64
 	UpTime       int
 	Err          error
 }

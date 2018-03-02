@@ -51,6 +51,7 @@ class App extends Component {
                     self.setSyncing(response.data);
                     break;
                 case "Server":
+                    console.log("PROCESANDO SERVER", response)
                     self.setServersD(response.data)
 
                     break;

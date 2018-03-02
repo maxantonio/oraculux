@@ -53,16 +53,23 @@ func (s *Server) write() {
 			}
 		}
 		//obtenemos informacion del servidor
-		s.ServerInfo.Block, s.ServerInfo.Err = s.rpc.EthGetBlockByNumber(s.ServerInfo.BlockNumber, false)     //bloque con su informacion de obtencion:(minero,dificultad etc..)
-		s.ServerInfo.Peers, s.ServerInfo.Err = s.rpc.NetPeerCount()                                           //nodos conectados con los que se sincroniza
-		s.ServerInfo.IsMining, s.ServerInfo.Err = s.rpc.EthMining()                                           //si esta minando o no
-		s.ServerInfo.LocalPending, s.ServerInfo.Err = s.rpc.EthGetTransactionCount(s.eth_coinbase, "pending") //transacciones pendientes locales
+		s.ServerInfo.Block, _ = s.rpc.EthGetBlockByNumber(s.ServerInfo.BlockNumber, false) //bloque con su informacion de obtencion:(minero,dificultad etc..)
+		s.ServerInfo.Peers, _ = s.rpc.NetPeerCount()                                       //nodos conectados con los que se sincroniza
+		s.ServerInfo.IsMining, _ = s.rpc.EthMining()
+		bigint, _ := s.rpc.EthGasPrice()
+		s.ServerInfo.GasPrice = bigint.Int64()
+		s.ServerInfo.Uncles, _ = s.rpc.EthGetUncleCountByBlockNumber(s.ServerInfo.BlockNumber)
+		var err1 error                                                                            //si esta minando o no
+		s.ServerInfo.LocalPending, err1 = s.rpc.EthGetTransactionCount(s.eth_coinbase, "pending") //transacciones pendientes locales
 		fmt.Println("respuesta de txpool")
-		response1, _ := s.rpc.Call("txpool_status")
+		response1, err := s.rpc.Call("txpool_status")
+		fmt.Println(err1)
 		data := &comon.PoolStatus{}
 		json.Unmarshal(response1, data)
+		fmt.Println(err)
+		fmt.Println(data)
 		s.ServerInfo.Pending = data
-		s.ServerInfo.Transactions, s.ServerInfo.Err = s.rpc.EthGetBlockTransactionCountByNumber(s.ServerInfo.BlockNumber)
+		s.ServerInfo.Transactions, _ = s.rpc.EthGetBlockTransactionCountByNumber(s.ServerInfo.BlockNumber)
 	}
 	//cal
 	uptimes := s.atempts - s.down
