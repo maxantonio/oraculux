@@ -3,21 +3,14 @@ import React from "react";
 export class Servers extends React.Component {
     constructor(props) {
         super(props);
-        console.log("creando el server")
         this.state = {
             servers: []
         }
     }
-
-    getDefaultProps() {
-        console.log("si se llama default props")
-    }
-
     componentWillReceiveProps(nextProps) {
         this.setState({
             servers: nextProps.servers
         });
-        console.log(nextProps.servers);
     }
 
     render() {
