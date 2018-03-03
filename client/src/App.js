@@ -1,7 +1,8 @@
 import React, {Component} from 'react';
 import { BarChart,Bar,Tooltip } from 'recharts';
 import './App.css';
-import {Servers} from "./components/Server";
+import {Servers} from "./components/Servers";
+import {Timer} from "./components/Timer";
 
 
 class App extends Component {
@@ -13,10 +14,10 @@ class App extends Component {
         this.transactions = [
             {name: 0, transactions: 0, fill: "#8884d8"}
         ];
-
+        this.last_block = 0, //tiempo demorado en obtener el bloque
         this.state = {
             transactions:this.transactions,
-            last_block: 0, //tiempo demorado en obtener el bloque
+
             times: [{name: 0, cont: 0, fill: "#ccc"}], //se llena en addTime
             avgtime: 15, //se calcula en addTime
             best_block: 0,//el ultimo bloque segun los nodos conectados al stat
@@ -58,6 +59,7 @@ class App extends Component {
                 case "FullInfo":
                     console.log(response)
                     self.setFullInfo(response.data);
+                    self.setServersD(response.data);
                     break;
                  default:
                     self.setStatus(response.info_type,response.data,response.block);
@@ -69,7 +71,7 @@ class App extends Component {
     setFullInfo(data) {
         console.log("LLAMANDO A FULLINFO")
         if (data.BlockNumber > this.state.best_block) {
-            this.addTime(this.state.last_block, data.BlockNumber);
+            this.addTime(this.last_block, data.BlockNumber);
             this.addTransactions(data.Transactions, data.BlockNumber)
             if (data.Block != null) {
 
@@ -95,8 +97,9 @@ class App extends Component {
                 gas_price: data.GasPrice,
                 hash_rate: data.HashRate,
                 peers: data.Peers,
-                last_block: 0
+                // last_block: 0
             });
+            this.last_Block = 0;
             if (data.Sincing.IsSyncing) {
                 this.setState({
                     lastknow_block: data.Sincing.HighestBlock,
@@ -133,12 +136,12 @@ class App extends Component {
     }
     setSyncing(data){
         if(this.state.best_block !== data.CurrentBlock) {
-            this.addTime(this.state.last_block,data.CurrentBlock);
+            this.addTime(this.last_block, data.CurrentBlock);
             this.setState({
                 best_block: data.CurrentBlock,
                 lastknow_block:data.HighestBlock,
-                last_block: 0
             });
+            this.last_Block = 0;
         }
     }
     setGasUsed(gass){
@@ -261,6 +264,7 @@ class App extends Component {
                 times: temp,
                 avgtime:avg
             });
+        this.last_block = 0
     }
     addUncle(count,block){
         console.log("procesando uncles", count, block);
@@ -304,19 +308,18 @@ class App extends Component {
 
     last_Block() {
         setInterval(() => {
-           this.setState({
-                last_block: this.state.last_block + 1
-            });
+            this.last_block = this.last_block + 1;
+            this.forceUpdate();
         }, 1000);
     }
     numberWithCommas = (x) => {
         return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
     render() {
-        const last_block = ((this.state.last_block <= 12) ? 'tc-green' : '') +
-            ((this.state.last_block >= 13 && this.state.last_block <= 19) ? 'tc-yellow' : '') +
-            ((this.state.last_block >= 20 && this.state.last_block <= 29) ? 'tc-orange' : '') +
-            ((this.state.last_block >= 30) ? 'tc-red' : '');
+        const last_block = ((this.last_block <= 12) ? 'tc-green' : '') +
+            ((this.last_block >= 13 && this.last_block <= 19) ? 'tc-yellow' : '') +
+            ((this.last_block >= 20 && this.last_block <= 29) ? 'tc-orange' : '') +
+            ((this.last_block >= 30) ? 'tc-red' : '');
 
 
         return (
@@ -342,16 +345,7 @@ class App extends Component {
                             </div>
                         </div>
                     </div>
-                    <div className="box">
-                        <div>
-                            <div className="pull-left icon tc-red">
-                                <i className={"fa fa-hourglass-o fa-4x " + last_block}></i></div>
-                            <div className="info">
-                                <span className="title">last block</span>
-                                <span className={"value " + last_block}>{this.state.last_block}s ago</span>
-                            </div>
-                        </div>
-                    </div>
+                    <Timer best_block={this.state.best_block}/>
                     <div className="box">
                         <div>
                             <div className="pull-left icon tc-yellow"><i className="fa fa-clock-o fa-4x"></i></div>

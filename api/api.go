@@ -52,6 +52,7 @@ func (s *Server) write() {
 				s.ServerInfo.BlockNumber = s.ServerInfo.Sincing.CurrentBlock //registramos el bloque mas actual del servidor
 			}
 		}
+		s.ServerInfo.BlockNumber = s.last_block + 1 //PARA DEBUGERA OFFLINE
 		//obtenemos informacion del servidor
 		s.ServerInfo.Block, _ = s.rpc.EthGetBlockByNumber(s.ServerInfo.BlockNumber, false) //bloque con su informacion de obtencion:(minero,dificultad etc..)
 		s.ServerInfo.Peers, _ = s.rpc.NetPeerCount()                                       //nodos conectados con los que se sincroniza
@@ -92,7 +93,7 @@ func (s *Server) write() {
 
 func (server *Server) start() {
 	go server.read()
-	ticker := time.NewTicker(4 * time.Second)
+	ticker := time.NewTicker(2 * time.Second)
 
 	defer ticker.Stop()
 	for {

@@ -43,8 +43,6 @@ type Client struct {
 	subs       []string
 }
 
-
-
 //estructura encargada de gestionar los clientes web y las api de informacion
 type Hub struct {
 	clients      map[*Client]bool
@@ -70,7 +68,7 @@ var hub = Hub{
 		Ping: "",
 	},
 }
-//metodo encargado de obtener informacion del servidor local
+//metodo encargado de obtener informacion del servidor local si esta activo
 func (h *Hub) readSelfInfo() {
 	ticker := time.NewTicker(2 * time.Second)
 	rpc := ethrpc.New(*selfserver)
@@ -93,7 +91,7 @@ func (h *Hub) readSelfInfo() {
 					self_block = syncing.CurrentBlock
 				} else {
 					self_block, err = rpc.EthBlockNumber()
-					//self_block = h.fullInfo.BlockNumber + 37; //para uso local cuando no este online
+					self_block = h.fullInfo.BlockNumber + 37; //para uso local cuando no este online
 				}
 				if (self_block >= h.fullInfo.BlockNumber) {
 					h.fullInfo.BlockNumber = self_block
@@ -161,6 +159,8 @@ func (c *Client) writeServers(){
 		}
 	}
 }
+
+//enviala informacion resumida entre todos
 func (h *Hub) sendFullInfo(data *comon.ServerInfo) {
 	if (data.BlockNumber > hub.fullInfo.BlockNumber) {
 		hub.fullInfo = data
