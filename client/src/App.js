@@ -35,11 +35,14 @@ class App extends Component {
             uncle_50:0,
             hash_rate:0,
             peers: 0,
+            propagation: {Block: 0, Date: new Date()},
             servers: []
         };
 
          this.last_Block();
-        var ws = new WebSocket("ws://" + document.location.host + "/ws");
+        var urlbase = "ws://" + document.location.host + "/ws";
+        urlbase = "ws://localhost/ws";// para desarrollo
+        var ws = new WebSocket(urlbase);
         var self = this;
         ws.onerror = function (error) {
             console.log("mensaje de error del websocket");
@@ -59,7 +62,7 @@ class App extends Component {
                 case "FullInfo":
                     console.log(response)
                     self.setFullInfo(response.data);
-                    self.setServersD(response.data);
+                    // self.setServersD(response.data);
                     break;
                  default:
                     self.setStatus(response.info_type,response.data,response.block);
@@ -76,6 +79,7 @@ class App extends Component {
             if (data.Block != null) {
 
                 if (data.Block.Number > this.state.best_block) {
+
                     var newminers = [];
                     newminers.push(this.state.miners[1]);
                     newminers.push(data.Block.Miner);
@@ -84,11 +88,13 @@ class App extends Component {
                     this.setDificulties(data.Block.Difficulty);
                     console.log("data del uncle");
                     this.addUncle(data.Block.Uncles.length, data.Block.Number);
+                    var propagation = {Block: data.Block.Number, Date: new Date()};
                     this.setState({
                         miners: newminers,
                         dificulty: data.Block.Difficulty,
                         totalDificulty: data.Block.TotalDifficulty,
                         gasLimit: data.Block.GasLimit,
+                        propagation: propagation
                     })
                 }
             }
@@ -345,7 +351,7 @@ class App extends Component {
                             </div>
                         </div>
                     </div>
-                    <Timer best_block={this.state.best_block}/>
+                    <Timer best_block={this.state.best_block} div={true}/>
                     <div className="box">
                         <div>
                             <div className="pull-left icon tc-yellow"><i className="fa fa-clock-o fa-4x"></i></div>
@@ -475,7 +481,7 @@ class App extends Component {
                     </div>
                 </div>
                 <div className="row">
-                    <Servers servers={this.state.servers}/>
+                    <Servers servers={this.state.servers} propagation={this.state.propagation}/>
                 </div>
             </div>
 

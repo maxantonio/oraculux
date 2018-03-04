@@ -5,13 +5,15 @@ export class Servers extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            servers: []
+            servers: [],
+            propagation: {}
         }
     }
 
     componentWillReceiveProps(nextProps) {
         this.setState({
-            servers: nextProps.servers
+            servers: nextProps.servers,
+            propagation: nextProps.propagation
         });
     }
 
@@ -25,17 +27,20 @@ export class Servers extends React.Component {
                 <th>IsMining</th>
                 <th>IsSyncing</th>
                 <th>Peers</th>
+                <th>Block</th>
                 <th>Last Block</th>
                 <th>Minner</th>
                 <th>Total Dificulty</th>
                 <th>Transactions</th>
                 <th>Uncles</th>
+                <th>Propagation</th>
                 <th>Latency</th>
+                <th>UpTime</th>
                 <th>Pending?</th>
                 </thead>
                 <tbody>
                 {serv.map((server) =>
-                    <Server info={server}/>
+                    <Server info={server} propagation={this.state.propagation}/>
                 )}
                 </tbody>
             </table>
