@@ -52,7 +52,7 @@ func (s *Server) write() {
 				s.ServerInfo.BlockNumber = s.ServerInfo.Sincing.CurrentBlock //registramos el bloque mas actual del servidor
 			}
 		}
-		s.ServerInfo.BlockNumber = s.last_block + 11 //PARA DEBUGERA OFFLINE
+		//s.ServerInfo.BlockNumber = s.last_block + 11 //PARA DEBUGERA OFFLINE
 		//obtenemos informacion del servidor
 		s.ServerInfo.Block, _ = s.rpc.EthGetBlockByNumber(s.ServerInfo.BlockNumber, false) //bloque con su informacion de obtencion:(minero,dificultad etc..)
 		s.ServerInfo.Peers, _ = s.rpc.NetPeerCount()                                       //nodos conectados con los que se sincroniza
