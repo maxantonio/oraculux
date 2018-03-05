@@ -120,3 +120,15 @@ span.title2 {
     /* text-overflow: ellipsis; */
 
 }
+
+.rowInside {
+    margin-left: 15px;
+}
+
+.mapa-content {
+    width: 670px;
+    height: 250px;
+    /* float: left; */
+    display: inline-block;
+    position: relative;
+}

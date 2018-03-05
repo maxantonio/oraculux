@@ -1,8 +1,10 @@
 import React, {Component} from 'react';
 import { BarChart,Bar,Tooltip } from 'recharts';
+import 'react-datamaps';
 import './App.css';
 import {Servers} from "./components/Servers";
 import {Timer} from "./components/Timer";
+import Datamap from "./components/datamap";
 
 
 class App extends Component {
@@ -40,8 +42,8 @@ class App extends Component {
         };
 
          this.last_Block();
-        let urlbase = "ws://" + document.location.host + "/ws";
-        //let urlbase = "ws://localhost/ws";// para desarrollo
+        // let urlbase = "ws://" + document.location.host + "/ws";
+        let urlbase = "ws://localhost/ws";// para desarrollo
         let ws = new WebSocket(urlbase);
         let self = this;
         ws.onerror = function (error) {
@@ -70,8 +72,12 @@ class App extends Component {
                     break;
             }
         }
+        ws.onclose = this.closeF;
     }
 
+    closeF(event) {
+        console.log("CONEXION CERRADA");
+    }
     setFullInfo(data) {
         console.log("LLAMANDO A FULLINFO");
         if (data.BlockNumber > this.state.best_block) {
@@ -380,65 +386,73 @@ class App extends Component {
                     <div className="box-small">
                     </div>
                 </div>
-                <div className="row">
-                    <div className="box">
-                        <span className="title2">Transactions</span>
-                        <BarChart width={280} height={80} data={this.state.transactions} bind >
-                            <Bar dataKey='transactions' fillKey='fill'/>
-                            <Tooltip/>
-                        </BarChart>
-                    </div>
-                    <div className="box">
-                        <span className="title2">Uncles</span>
-                        <BarChart width={280} height={80}  data={this.state.uncles} bind>
-                            <Bar dataKey='cont' fillKey='fill'  />
-                            <Tooltip/>
-                        </BarChart>
-                    </div>
-                    <div className="box">
-                        <span className="title2">Block Time</span>
-                        <BarChart width={280} height={80}  data={this.state.times} bind>
-                            <Bar dataKey='cont' fillKey='fill'  />
-                            <Tooltip/>
-                        </BarChart>
-                    </div>
-                    <div className="box">
-                        <span className="title2">DIFFICULTY</span>
-                        <BarChart width={280} height={80}  data={this.state.dificulties} bind>
-                            <Bar dataKey='cont' fillKey='fill'  />
-                            <Tooltip/>
-                        </BarChart>
-                    </div>
-                </div>
-                <div className="row">
-                    <div className="box">
-                        <span className="title2">GAS SPENDING</span>
-                        <BarChart width={280} height={80} data={this.state.gasUsed} bind >
-                            <Bar dataKey='cont' fillKey='fill'/>
-                            <Tooltip/>
-                        </BarChart>
-                    </div>
-                    <div className="box">
-                        <span className="title2">GAS LIMIT</span>
-                        <BarChart width={280} height={80}  data={this.state.gasLimitList} bind>
-                            <Bar dataKey='cont' fillKey='fill'  />
-                            <Tooltip/>
-                        </BarChart>
-                    </div>
 
-                    <div className="box" >
-                        <span class="title2">last blocks miners</span>
-                        <div class="small-title-miner ng-binding minners">{this.state.miners[0]}</div>
-                        <div blocks="14">
-                        <div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div>
+                <div className="row">
+                    <div className="rowInside">
+                        <div className="row">
+                            <div className="box">
+                                <span className="title2">Transactions</span>
+                                <BarChart width={280} height={80} data={this.state.transactions} bind >
+                                    <Bar dataKey='transactions' fillKey='fill'/>
+                                    <Tooltip/>
+                                </BarChart>
+                            </div>
+                            <div className="box">
+                                <span className="title2">Uncles</span>
+                                <BarChart width={280} height={80} data={this.state.uncles} bind>
+                                    <Bar dataKey='cont' fillKey='fill'  />
+                                    <Tooltip/>
+                                </BarChart>
+                            </div>
+                            <div className="box">
+                                <span className="title2">Block Time</span>
+                                <BarChart width={280} height={80} data={this.state.times} bind>
+                                    <Bar dataKey='cont' fillKey='fill'  />
+                                    <Tooltip/>
+                                </BarChart>
+                            </div>
+                            <div className="box">
+                                <span className="title2">DIFFICULTY</span>
+                                <BarChart width={280} height={80} data={this.state.dificulties} bind>
+                                    <Bar dataKey='cont' fillKey='fill'  />
+                                    <Tooltip/>
+                                </BarChart>
+                            </div>
                         </div>
-                        <div class="small-title-miner ng-binding minners">{this.state.miners[1]}</div>
-                       <div blocks="14">
-                           <div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div>
-                       </div>
-                    </div>
-                    <div className="box">
+                        <div className="row">
+                            <div className="box">
+                                <span className="title2">GAS SPENDING</span>
+                                <BarChart width={280} height={80} data={this.state.gasUsed} bind >
+                                    <Bar dataKey='cont' fillKey='fill'/>
+                                    <Tooltip/>
+                                </BarChart>
+                            </div>
+                            <div className="box">
+                                <span className="title2">GAS LIMIT</span>
+                                <BarChart width={280} height={80} data={this.state.gasLimitList} bind>
+                                    <Bar dataKey='cont' fillKey='fill'  />
+                                    <Tooltip/>
+                                </BarChart>
+                            </div>
 
+                            <div className="box" >
+                                <span class="title2">last blocks miners</span>
+                                <div class="small-title-miner ng-binding minners">{this.state.miners[0]}</div>
+                                <div blocks="14">
+                                    <div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div>
+                                </div>
+                                <div class="small-title-miner ng-binding minners">{this.state.miners[1]}</div>
+                                <div blocks="14">
+                                    <div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div>
+                                </div>
+                            </div>
+                            <div className="box">
+
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mapa-content">
+                        <Datamap/>
                     </div>
                 </div>
                 <div className="row">
