@@ -154,7 +154,6 @@ func (c *Client) writeServers(){
 		select {
 		case message := <-c.sendServer:
 			fmt.Println("RECIBIDA INFO A ENVIAR")
-			fmt.Println(message)
 			c.ws.WriteJSON(message)
 		}
 	}
@@ -182,7 +181,6 @@ func (s *Server) read() {
 		_, message, err := s.ws.ReadMessage()
 		data := &comon.ServerInfo{}
 		fmt.Println("mensaje recibido de servidor")
-		fmt.Println(string(message[:]))
 		err2 := json.Unmarshal(message, data)
 
 		if (err2 != nil) {
@@ -192,11 +190,9 @@ func (s *Server) read() {
 			if data.Ping != "" {
 				//DOING PONG
 				fmt.Println("recibio un ping")
-				fmt.Println(data)
 				s.ws.WriteJSON(data)
 			} else {
 				fmt.Println("RECIBIDA INFORMACION DE SERVIDOR")
-
 				info := &SocketInfo{
 					Info_type: "Server",
 					Data:      data,
