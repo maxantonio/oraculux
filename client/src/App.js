@@ -10,11 +10,11 @@ class App extends Component {
 
     constructor() {
         super();
-        this.uncles = [{name: 0, cont: 0, fill: "#ccc"}]
+        this.uncles = [{name: 0, cont: 0, fill: "#ccc"}];
         this.transactions = [
             {name: 0, transactions: 0, fill: "#8884d8"}
         ];
-        this.last_block = 0, //tiempo demorado en obtener el bloque
+        this.last_block = 0; //tiempo demorado en obtener el bloque
         this.state = {
             transactions:this.transactions,
 
@@ -40,42 +40,43 @@ class App extends Component {
         };
 
          this.last_Block();
-        var urlbase = "ws://" + document.location.host + "/ws";
-        urlbase = "ws://localhost/ws";// para desarrollo
-        var ws = new WebSocket(urlbase);
-        var self = this;
+        let urlbase = "ws://" + document.location.host + "/ws";
+        //let urlbase = "ws://localhost/ws";// para desarrollo
+        let ws = new WebSocket(urlbase);
+        let self = this;
         ws.onerror = function (error) {
             console.log("mensaje de error del websocket");
             console.log(error);
-        }
+        };
         ws.onmessage = function(event) {
-            var response = JSON.parse(event.data);
+            let response = JSON.parse(event.data);
             switch(response.info_type){
                 case "Syncing":
                     self.setSyncing(response.data);
                     break;
                 case "Server":
-                    console.log("PROCESANDO SERVER", response)
-                    self.setServersD(response.data)
+                    console.log("PROCESANDO SERVER", response);
+                    self.setServersD(response.data);
 
                     break;
                 case "FullInfo":
-                    console.log(response)
+                    console.log(response);
                     self.setFullInfo(response.data);
                     // self.setServersD(response.data);
                     break;
                  default:
-                    self.setStatus(response.info_type,response.data,response.block);
+                     console.log("No definido");
+                     // self.setStatus(response.info_type,response.data,response.block);
                     break;
             }
         }
     }
 
     setFullInfo(data) {
-        console.log("LLAMANDO A FULLINFO")
+        console.log("LLAMANDO A FULLINFO");
         if (data.BlockNumber > this.state.best_block) {
             this.addTime(this.last_block, data.BlockNumber);
-            this.addTransactions(data.Transactions, data.BlockNumber)
+            this.addTransactions(data.Transactions, data.BlockNumber);
             if (data.Block != null) {
 
                 if (data.Block.Number > this.state.best_block) {
@@ -84,7 +85,7 @@ class App extends Component {
                     newminers.push(this.state.miners[1]);
                     newminers.push(data.Block.Miner);
                     this.setGasUsed(data.Block.GasUsed);
-                    this.setGasLimit(data.Block.GasLimit)
+                    this.setGasLimit(data.Block.GasLimit);
                     this.setDificulties(data.Block.Difficulty);
                     console.log("data del uncle");
                     this.addUncle(data.Block.Uncles.length, data.Block.Number);
@@ -114,7 +115,7 @@ class App extends Component {
         }
     }
     setServersD(data) {
-        console.log("ESTAMOS PROCESANDO UNSERVER")
+        console.log("ESTAMOS PROCESANDO UNSERVER");
         console.log(this.state);
         console.log("ya vite");
         var serversOld = this.state.servers;
@@ -127,13 +128,13 @@ class App extends Component {
                 server = data;
                 finded = true;
             }
-            console.log(data)
+            console.log(data);
             servers.push(server);
         }
         if (!finded) {
             servers.push(data);
         }
-        console.log(servers)
+        console.log(servers);
         this.setState({
             servers: servers
             }
@@ -150,11 +151,25 @@ class App extends Component {
             this.last_Block = 0;
         }
     }
+
+    setDificulties(gass) {
+        var temp = [];
+        var inicio = 0;
+        if (this.state.dificulties.length > 49)
+            inicio = 1;
+        for (var i = inicio; i < this.state.dificulties.length; i++) {
+            temp.push(this.state.dificulties[i]);
+        }
+        temp.push({cont: gass, fill: this.getTimeFill()});
+        this.setState({
+            dificulties: temp
+        });
+    }
     setGasUsed(gass){
         var temp = [];
-        var inicio = 0
+        var inicio = 0;
         if(this.state.gasUsed.length>49)
-            inicio = 1
+            inicio = 1;
         for (var i = inicio; i < this.state.gasUsed.length; i++) {
             temp.push(this.state.gasUsed[i]);
         }
@@ -165,9 +180,9 @@ class App extends Component {
     }
     setGasLimit(gass){
         var temp = [];
-        var inicio = 0
+        var inicio = 0;
         if(this.state.gasLimitList.length>49)
-            inicio = 1
+            inicio = 1;
         for (var i = inicio; i < this.state.gasLimitList.length; i++) {
             temp.push(this.state.gasLimitList[i]);
         }
@@ -176,63 +191,8 @@ class App extends Component {
             gasLimitList:temp
         });
     }
-    setDificulties(gass){
-        var temp = [];
-        var inicio = 0
-        if(this.state.dificulties.length>49)
-            inicio = 1
-        for (var i = inicio; i < this.state.dificulties.length; i++) {
-            temp.push(this.state.dificulties[i]);
-        }
-        temp.push({cont:gass,fill:this.getTimeFill()});
-        this.setState({
-            dificulties:temp
-        });
-    }
-    setBlockData(data){
-        console.log("SETING BLOCK INFO");
-            var newminers = [];
-            newminers.push(this.state.miners[1]);
-            newminers.push(data.Miner);
-            this.setGasUsed(data.GasUsed);
-            this.setGasLimit(data.GasLimit)
-            this.setDificulties(data.Difficulty)
-            this.setState({
-                miners: newminers,
-                dificulty:data.Difficulty,
-                totalDificulty:data.TotalDifficulty,
-                gasLimit:data.GasLimit,
-               });
-        console.log("SETTED BLOCK INFO");
-    }
-    setStatus(type,data,block){
-        switch(type){
-            case "Block":
-                //PETICION QUE DA LA INFO DEL BLOQUE,MINERO ETC
-                this.setBlockData(data)
-                break;
-            case "FullBlock":
-                this.setBlock(data)
-                break;
-            case "Uncles":
-               this.addUncle(data,block);
-                break;
-            case "GasPrice":
-                this.setState({ gas_price:data});
-                break;
-            case "Peers":
-                this.setState({ peers:data});
-                break;
-            case "Hashrate":
-                this.setState({ hash_rate:data});
-                break;
-            case "Transactions":
-                this.addTransactions(data,block);
-                break;
-            default:
-                console.log(type+" no esta definido todavia",data)
-        }
-    }
+
+    //utiles para obtener colores
     getTimeFill(time){
         if(time<=10) {
             return "#5fc46a";
@@ -253,9 +213,11 @@ class App extends Component {
             return "#008400"
         }
     }
+
+    //agregando valores alos graficos
     addTime(time,block){
 //cambio
-        var nuevo = {name: block, cont: time, fill: this.getTimeFill(time)}
+        var nuevo = {name: block, cont: time, fill: this.getTimeFill(time)};
         var temp = [];
         var total =0;
         for (var j = 0; j < this.state.times.length; j++) {
@@ -276,7 +238,7 @@ class App extends Component {
         console.log("procesando uncles", count, block);
         if (this.uncles.length === 0 || block > this.uncles[this.uncles.length - 1].name) {
             console.log("entro al if de uncles", count, block);
-            var nuevo = {name: block, cont: count, fill: this.getTransFill(count)}
+            var nuevo = {name: block, cont: count, fill: this.getTransFill(count)};
             this.uncles.push(nuevo);
             if(this.uncles.length>50)
                 this.uncles.shift();
@@ -284,7 +246,7 @@ class App extends Component {
             for (var j = 0; j < this.uncles.length; j++) {
                 temp.push(this.uncles[j]);
             }
-            var result = 0
+            var result = 0;
             for(var i in temp) {
                 result += temp[i].cont;
             }
@@ -297,16 +259,16 @@ class App extends Component {
         //AQUI ES NECESARIO
         console.log("ADICIONANDO TRANSACCIONES", count, block, this.transactions[this.transactions.length - 1].name);
         if (block > this.transactions[this.transactions.length - 1].name) {
-            console.log(block," > ",this.transactions[this.transactions.length-1].name)
+            console.log(block, " > ", this.transactions[this.transactions.length - 1].name);
             var trans = [];
             if(this.transactions.length>40)
                 this.transactions.shift();
             for (var j = 0; j < this.transactions.length; j++) {
                 trans.push(this.transactions[j]);
             }
-            var nuevo = {name: block, transactions: count, fill: this.getTransFill(count)}
+            var nuevo = {name: block, transactions: count, fill: this.getTransFill(count)};
             trans.push(nuevo);
-            this.transactions = trans
+            this.transactions = trans;
             this.setState({transactions: trans});
         }
         // this.transactions = count;
@@ -315,12 +277,11 @@ class App extends Component {
     last_Block() {
         setInterval(() => {
             this.last_block = this.last_block + 1;
-            this.forceUpdate();
         }, 1000);
     }
     numberWithCommas = (x) => {
         return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    }
+    };
     render() {
         const last_block = ((this.last_block <= 12) ? 'tc-green' : '') +
             ((this.last_block >= 13 && this.last_block <= 19) ? 'tc-yellow' : '') +

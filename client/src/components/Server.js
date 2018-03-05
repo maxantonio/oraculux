@@ -1,5 +1,6 @@
 import React from "react";
 import {Timer} from "./Timer";
+import {BarChart, Bar, Tooltip} from 'recharts';
 
 export class Server extends React.Component {
     constructor(props) {
@@ -16,10 +17,9 @@ export class Server extends React.Component {
             UpTime: 0,
             Pending: {Pending: 0, Queued: 0},
             propagation: {Block: 0, Date: new Date()},
+            History: Array(40),
             timeProp: 0,
-
         }
-
     }
     componentWillReceiveProps(nextProps) {
 
@@ -36,7 +36,6 @@ export class Server extends React.Component {
 
 
     }
-
     render() {
 
         const color_sinc = ((this.state.BlockNumber === this.state.propagation.Block) ? "tc-green" : '') +
@@ -62,6 +61,7 @@ export class Server extends React.Component {
                         {this.state.Pending != null &&
                         <td>{(this.state.Pending.Pending + this.state.Pending.Queued).toString()}</td>
                         }
+                <td><BarChart/></td>
                     </tr>
         );
     }
