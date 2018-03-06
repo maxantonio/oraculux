@@ -148,7 +148,7 @@ func (s *Server) reportLatency() error {
 	return s.socket.WriteJSON(s.ServerInfo)
 }
 
-var addr = flag.String("addr", "35.227.84.238:80", "http service address")
+var addr = flag.String("addr", "localhost", "http service address")
 var name = flag.String("name", "", "nombre a mostrar del servidor")
 var rpc = flag.String("rpc", "http://localhost:8545", "nombre a mostrar del servidor")
 func main() {

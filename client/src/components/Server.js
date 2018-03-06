@@ -17,10 +17,26 @@ export class Server extends React.Component {
             UpTime: 0,
             Pending: {Pending: 0, Queued: 0},
             propagation: {Block: 0, Date: new Date()},
-            History: Array(40),
+            History: [{Time: 10, Fill: this.getTimeFill(10)}],
             timeProp: 0,
         }
     }
+
+
+    getTimeFill(time) {
+        if (time <= 10) {
+            return "#5fc46a";
+        } else if (time > 10 && time <= 20) {
+            return "#ffd75a";
+        } else if (time > 20 && time < 30) {
+            return "#ff8812";
+        } else {
+            return "#eb4b4b";
+        }
+    }
+
+
+
     componentWillReceiveProps(nextProps) {
 
         this.setState(nextProps.info);
@@ -30,7 +46,17 @@ export class Server extends React.Component {
         if (nextProps.info.BlockNumber > this.state.BlockNumber) {//si el bloque que entra nuevo es
             if (nextProps.info.BlockNumber == nextProps.propagation.Block) {
                 var propagation = new Date() - nextProps.propagation.Date;
-                this.setState({timeProp: propagation});
+                var newHistory = new Array()
+                var start = 0;
+                if (this.state.History.length > 39) {
+                    start = 1
+                }
+                for (var i = start; i < this.state.History.length; i++) {
+                    newHistory.push(this.state.History[i]);
+                }
+                let obj = {Time: propagation, Fill: this.getTimeFill(propagation)}
+                newHistory.push(obj);
+                this.setState({timeProp: propagation, History: newHistory});
             }
         }
 
@@ -56,6 +82,12 @@ export class Server extends React.Component {
                         <td>{this.state.Transactions}</td>
                         {this.state.Block != null && <td>{this.state.Block.Uncles.length}</td>}
                 <td>{this.state.timeProp}</td>
+                <td>
+                    <BarChart width={60} height={20} data={this.state.History} bind>
+                        <Bar dataKey='Time' fillKey='Fill'/>
+                        <Tooltip/>
+                    </BarChart>
+                </td>
                         <td>{this.state.Latency}</td>
                 <td>{this.state.UpTime}%</td>
                         {this.state.Pending != null &&

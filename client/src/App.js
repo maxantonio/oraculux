@@ -38,6 +38,7 @@ class App extends Component {
             hash_rate:0,
             peers: 0,
             propagation: {Block: 0, Date: new Date()},
+
             servers: []
         };
 
@@ -59,7 +60,7 @@ class App extends Component {
                 case "Server":
                     console.log("PROCESANDO SERVER", response);
                     self.setServersD(response.data);
-
+                    self.setFullInfo(response.data);
                     break;
                 case "FullInfo":
                     console.log(response);
@@ -156,6 +157,14 @@ class App extends Component {
             });
             this.last_Block = 0;
         }
+    }
+
+    compare(a, b) {
+        if (a.Time < b.Time)
+            return -1;
+        if (a.Time > b.Time)
+            return 1;
+        return 0;
     }
 
     setDificulties(gass) {

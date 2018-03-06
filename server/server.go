@@ -116,6 +116,7 @@ func (h *Hub) readSelfInfo() {
 //administracion de los canales de comunicacion de los clientes y los servidores
 func (h *Hub) start() {
 	if (*mode == "merge") {
+		fmt.Println("USANDO MODE MERGE")
 		go hub.readSelfInfo()
 	}
 	for {
@@ -198,8 +199,11 @@ func (s *Server) read() {
 					Data:      data,
 					Server:    "por definir",
 				}
-				go func() { hub.broadcast <- *info }()
-				go func() { hub.sendFullInfo(data) }()
+				go func() {
+					hub.broadcast <- *info
+					//hub.sendFullInfo(data)
+				}()
+
 
 
 			}
@@ -257,6 +261,7 @@ var mode = flag.String("mode", "merge", "modo del servidor(self,soloapi,merge[de
 var selfserver = flag.String("selfserver", "http://127.0.0.1:8545", "direccion servidor rpc de la info propia del stat")
 
 func main() {
+	flag.Parse()
 
 	go hub.start()
 	//manejando laspeticiones web http
