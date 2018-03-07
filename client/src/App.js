@@ -43,8 +43,8 @@ class App extends Component {
         };
 
          this.last_Block();
-        // let urlbase = "ws://" + document.location.host + "/ws";
-        let urlbase = "ws://localhost/ws";// para desarrollo
+        let urlbase = "ws://" + document.location.host + "/ws";
+        // let urlbase = "ws://localhost/ws";// para desarrollo
         let ws = new WebSocket(urlbase);
         let self = this;
         ws.onerror = function (error) {
