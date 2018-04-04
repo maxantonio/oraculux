@@ -12,6 +12,10 @@ class App extends Component {
 
     constructor() {
         super();
+        this.historyProp = [{server: ""}];
+        this.histogranProp = [
+            0
+        ]
         this.uncles = [{name: 0, cont: 0, fill: "#ccc"}];
         this.transactions = [
             {name: 0, transactions: 0, fill: "#8884d8"}
@@ -43,13 +47,12 @@ class App extends Component {
         };
 
          this.last_Block();
-        let urlbase = "ws://" + document.location.host + "/ws";
-        // let urlbase = "ws://localhost/ws";// para desarrollo
+        // let urlbase = "ws://" + document.location.host + "/ws";
+        let urlbase = "ws://localhost:8080/ws";// para desarrollo
         let ws = new WebSocket(urlbase);
         let self = this;
         ws.onerror = function (error) {
-            console.log("mensaje de error del websocket");
-            console.log(error);
+
         };
         ws.onmessage = function(event) {
             let response = JSON.parse(event.data);
@@ -58,14 +61,11 @@ class App extends Component {
                     self.setSyncing(response.data);
                     break;
                 case "Server":
-                    console.log("PROCESANDO SERVER", response);
                     self.setServersD(response.data);
                     self.setFullInfo(response.data);
                     break;
                 case "FullInfo":
-                    console.log(response);
                     self.setFullInfo(response.data);
-                    // self.setServersD(response.data);
                     break;
                  default:
                      console.log("No definido");
@@ -76,11 +76,41 @@ class App extends Component {
         ws.onclose = this.closeF;
     }
 
+    addPropagationServer = function (name, prop) {
+        this.histogranProp.push(prop);
+        var propagation = this.histogranProp;
+        console.log(propagation);
+        var data = window.d3.layout.histogram()
+            .frequency(false)
+            .range([0, 10000])
+            .bins(10)
+            (propagation);
+
+        var freqCum = 0;
+        var histogram = data.map(function (val) {
+            freqCum += val.length;
+            var cumPercent = (freqCum / Math.max(1, propagation.length));
+
+            return {
+                x: val.x,
+                dx: val.dx,
+                y: val.y,
+                frequency: val.length,
+                cumulative: freqCum,
+                cumpercent: cumPercent
+            };
+        });
+        console.log("HISTOGRAMMM SSSS");
+
+        console.log(histogram);
+        this.setState({
+            histogram: histogram
+        });
+    }
     closeF(event) {
         console.log("CONEXION CERRADA");
     }
     setFullInfo(data) {
-        console.log("LLAMANDO A FULLINFO");
         if (data.BlockNumber > this.state.best_block) {
             this.addTime(this.last_block, data.BlockNumber);
             this.addTransactions(data.Transactions, data.BlockNumber);
@@ -94,7 +124,6 @@ class App extends Component {
                     this.setGasUsed(data.Block.GasUsed);
                     this.setGasLimit(data.Block.GasLimit);
                     this.setDificulties(data.Block.Difficulty);
-                    console.log("data del uncle");
                     this.addUncle(data.Block.Uncles.length, data.Block.Number);
                     var propagation = {Block: data.Block.Number, Date: new Date()};
                     this.setState({
@@ -122,11 +151,9 @@ class App extends Component {
         }
     }
     setServersD(data) {
-        console.log("ESTAMOS PROCESANDO UNSERVER");
-        console.log(this.state);
-        console.log("ya vite");
+        data.key = data.Server;
+
         var serversOld = this.state.servers;
-        console.log("no llego");
         var servers = [];
         var finded = false;
         for (var i = 0; i < serversOld.length; i++) {
@@ -135,18 +162,15 @@ class App extends Component {
                 server = data;
                 finded = true;
             }
-            console.log(data);
             servers.push(server);
         }
         if (!finded) {
             servers.push(data);
         }
-        console.log(servers);
         this.setState({
             servers: servers
             }
         );
-        console.log("DEBIO PROCESAR EL SERVER");
     }
     setSyncing(data){
         if(this.state.best_block !== data.CurrentBlock) {
@@ -166,7 +190,6 @@ class App extends Component {
             return 1;
         return 0;
     }
-
     setDificulties(gass) {
         var temp = [];
         var inicio = 0;
@@ -250,9 +273,7 @@ class App extends Component {
         this.last_block = 0
     }
     addUncle(count,block){
-        console.log("procesando uncles", count, block);
         if (this.uncles.length === 0 || block > this.uncles[this.uncles.length - 1].name) {
-            console.log("entro al if de uncles", count, block);
             var nuevo = {name: block, cont: count, fill: this.getTransFill(count)};
             this.uncles.push(nuevo);
             if(this.uncles.length>50)
@@ -265,16 +286,12 @@ class App extends Component {
             for(var i in temp) {
                 result += temp[i].cont;
             }
-            console.log("entro al if de uncles", count, block);
             this.setState({ uncles:temp,uncle_50:result,uncle_val:nuevo.cont});
-            console.log("seteado los uncles", this.state);
         }
     }
     addTransactions(count,block){
         //AQUI ES NECESARIO
-        console.log("ADICIONANDO TRANSACCIONES", count, block, this.transactions[this.transactions.length - 1].name);
         if (block > this.transactions[this.transactions.length - 1].name) {
-            console.log(block, " > ", this.transactions[this.transactions.length - 1].name);
             var trans = [];
             if(this.transactions.length>40)
                 this.transactions.shift();
@@ -445,18 +462,44 @@ class App extends Component {
                             </div>
 
                             <div className="box" >
-                                <span class="title2">last blocks miners</span>
-                                <div class="small-title-miner ng-binding minners">{this.state.miners[0]}</div>
+                                <span className="title2">last blocks miners</span>
+                                <div className="small-title-miner ng-binding minners">{this.state.miners[0]}</div>
                                 <div blocks="14">
-                                    <div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
                                 </div>
-                                <div class="small-title-miner ng-binding minners">{this.state.miners[1]}</div>
+                                <div className="small-title-miner ng-binding minners">{this.state.miners[1]}</div>
                                 <div blocks="14">
-                                    <div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div><div class="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
+                                    <div className="block bg-info"></div>
                                 </div>
                             </div>
                             <div className="box">
-
+                                <span className="title2">Histogram</span>
+                                <BarChart width={280} height={80} data={this.state.histogram} bind>
+                                    <Bar dataKey='y'/>
+                                    <Tooltip/>
+                                </BarChart>
                             </div>
                         </div>
                     </div>
@@ -465,7 +508,8 @@ class App extends Component {
                     </div>
                 </div>
                 <div className="row">
-                    <Servers servers={this.state.servers} propagation={this.state.propagation}/>
+                    <Servers servers={this.state.servers} propagation={this.state.propagation}
+                             handlePropagation={this.addPropagationServer.bind(this)}/>
                 </div>
             </div>
 

@@ -7,7 +7,9 @@
     "react-dom": "^16.2.0",
     "react-scripts": "1.1.0",
     "recharts": "^1.0.0-beta.10",
-    "react-datamaps": "^0.4"
+    "react-datamaps": "^0.4",
+    "d3": "^4.13.0"
+
   },
   "scripts": {
     "start": "set PORT=3000 && react-scripts start",

@@ -10,10 +10,10 @@ var perfData = window.performance.timing;
 var pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
 var connectTime = perfData.responseEnd - perfData.requestStart;
 var renderTime = perfData.domComplete - perfData.domLoading;
-console.log(pageLoadTime);
-console.log(connectTime);
-console.log(renderTime);
-console.log(perfData);
+// console.log(pageLoadTime);
+// console.log(connectTime);
+// console.log(renderTime);
+// console.log(perfData);
 
 
 

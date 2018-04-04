@@ -6,7 +6,7 @@ export class Timer extends React.Component {
         this.state = {
             last_block: 0,
             best_block: 0,
-            div: true,
+            div: props.div,
         }
         this.last_Block();
     }

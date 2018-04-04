@@ -38,13 +38,13 @@ export class Server extends React.Component {
 
 
     componentWillReceiveProps(nextProps) {
-
         this.setState(nextProps.info);
         if (this.state.propagation.Block !== nextProps.propagation.Block) {//si cambia el bloque general
             this.setState({propagation: nextProps.propagation});//actualizamos la informacion de la propagacion
         }
         if (nextProps.info.BlockNumber > this.state.BlockNumber) {//si el bloque que entra nuevo es
             if (nextProps.info.BlockNumber == nextProps.propagation.Block) {
+                console.log("bloque que coincide con la propagacion encontrado");
                 var propagation = new Date() - nextProps.propagation.Date;
                 var newHistory = new Array()
                 var start = 0;
@@ -57,6 +57,7 @@ export class Server extends React.Component {
                 let obj = {Time: propagation, Fill: this.getTimeFill(propagation)}
                 newHistory.push(obj);
                 this.setState({timeProp: propagation, History: newHistory});
+                nextProps.handlePropagation(nextProps.Server, propagation);
             }
         }
 

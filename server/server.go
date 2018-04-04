@@ -70,7 +70,7 @@ var hub = Hub{
 }
 //metodo encargado de obtener informacion del servidor local si esta activo
 func (h *Hub) readSelfInfo() {
-	ticker := time.NewTicker(2 * time.Second)
+	ticker := time.NewTicker(3 * time.Second)
 	rpc := ethrpc.New(*selfserver)
 	fmt.Println("INICIALIZANDO TIMER HUB")
 	for {
@@ -91,7 +91,7 @@ func (h *Hub) readSelfInfo() {
 					self_block = syncing.CurrentBlock
 				} else {
 					self_block, err = rpc.EthBlockNumber()
-					//self_block = h.fullInfo.BlockNumber + 22; //para uso local cuando no este online
+					//self_block = h.fullInfo.BlockNumber + 2; //para uso local cuando no este online
 				}
 				if (self_block >= h.fullInfo.BlockNumber) {
 					h.fullInfo.BlockNumber = self_block
@@ -278,6 +278,6 @@ func main() {
 		wsApi(w, r)
 	})
 	//iniciando el servidor por el puerto
-	http.ListenAndServe(":80", nil)
+	http.ListenAndServe(":8080", nil)
 }
 
