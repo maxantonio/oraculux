@@ -89,9 +89,12 @@ func (h *Hub) readSelfInfo() {
 				h.fullInfo.Sincing = syncing
 				if (syncing.IsSyncing) {
 					self_block = syncing.CurrentBlock
+					self_block = h.fullInfo.BlockNumber + 2;
+					fmt.Println(self_block)
 				} else {
 					self_block, err = rpc.EthBlockNumber()
-					//self_block = h.fullInfo.BlockNumber + 2; //para uso local cuando no este online
+					self_block = h.fullInfo.BlockNumber + 2; //para uso local cuando no este online
+					fmt.Println(self_block)
 				}
 				if (self_block >= h.fullInfo.BlockNumber) {
 					h.fullInfo.BlockNumber = self_block
@@ -160,7 +163,7 @@ func (c *Client) writeServers(){
 	}
 }
 
-//enviala informacion resumida entre todos
+//envia la informacion resumida entre todos
 func (h *Hub) sendFullInfo(data *comon.ServerInfo) {
 	if (data.BlockNumber > hub.fullInfo.BlockNumber) {
 		hub.fullInfo = data
@@ -208,7 +211,6 @@ func (s *Server) read() {
 
 			}
 		}
-
 		if err != nil {
 			hub.removeServer <- s
 			s.ws.Close()
@@ -258,6 +260,7 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 
 // fariables que se pueden recibir por parametros
 var mode = flag.String("mode", "merge", "modo del servidor(self,soloapi,merge[default]")
+//
 var selfserver = flag.String("selfserver", "http://127.0.0.1:8545", "direccion servidor rpc de la info propia del stat")
 
 func main() {
@@ -280,4 +283,3 @@ func main() {
 	//iniciando el servidor por el puerto
 	http.ListenAndServe(":8080", nil)
 }
-
