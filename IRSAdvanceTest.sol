@@ -17,13 +17,13 @@ contract owned {
     }
 }
 
-interface tokenRecipient {function receiveApproval(address _from, uint256 _value, address _token, bytes _extraData) public;}
+interface tokenRecipient {function receiveApproval(address _from, uint256 _value, address _token, bytes _extraData) external;}
 
 contract TokenERC20 {
     // Public variables of the token
     string public name;
     string public symbol;
-    uint8 public decimals = 18;
+    uint8 public decimals = 2;
     // 18 decimals is the strongly suggested default, avoid changing it
     uint256 public totalSupply;
 
@@ -73,7 +73,7 @@ contract TokenERC20 {
         balanceOf[_from] -= _value;
         // Add the same to the recipient
         balanceOf[_to] += _value;
-        Transfer(_from, _to, _value);
+        emit Transfer(_from, _to, _value);
         // Asserts are used to use static analysis to find bugs in your code. They should never fail
         assert(balanceOf[_from] + balanceOf[_to] == previousBalances);
     }
@@ -154,7 +154,7 @@ contract TokenERC20 {
         // Subtract from the sender
         totalSupply -= _value;
         // Updates totalSupply
-        Burn(msg.sender, _value);
+        emit Burn(msg.sender, _value);
         return true;
     }
 
@@ -177,7 +177,7 @@ contract TokenERC20 {
         // Subtract from the sender's allowance
         totalSupply -= _value;
         // Update totalSupply
-        Burn(_from, _value);
+        emit Burn(_from, _value);
         return true;
     }
 }
@@ -186,7 +186,7 @@ contract TokenERC20 {
 /*       ADVANCED TOKEN STARTS HERE       */
 /******************************************/
 
-contract MyAdvancedToken is owned, TokenERC20 {
+contract DemoxContract is owned, TokenERC20 {
 
     uint256 public sellPrice;
     uint256 public buyPrice;
@@ -197,7 +197,7 @@ contract MyAdvancedToken is owned, TokenERC20 {
     event FrozenFunds(address target, bool frozen);
 
     /* Initializes contract with initial supply tokens to the creator of the contract */
-    function MyAdvancedToken(
+    function DemoxContract(
         uint256 initialSupply,
         string tokenName,
         string tokenSymbol
@@ -219,7 +219,7 @@ contract MyAdvancedToken is owned, TokenERC20 {
         // Subtract from the sender
         balanceOf[_to] += _value;
         // Add the same to the recipient
-        Transfer(_from, _to, _value);
+        emit Transfer(_from, _to, _value);
     }
 
     /// @notice Create `mintedAmount` tokens and send it to `target`
@@ -228,8 +228,8 @@ contract MyAdvancedToken is owned, TokenERC20 {
     function mintToken(address target, uint256 mintedAmount) onlyOwner public {
         balanceOf[target] += mintedAmount;
         totalSupply += mintedAmount;
-        Transfer(0, this, mintedAmount);
-        Transfer(this, target, mintedAmount);
+        emit Transfer(0, this, mintedAmount);
+        emit Transfer(this, target, mintedAmount);
     }
 
     /// @notice `freeze? Prevent | Allow` `target` from sending & receiving tokens
@@ -237,7 +237,7 @@ contract MyAdvancedToken is owned, TokenERC20 {
     /// @param freeze either to freeze it or not
     function freezeAccount(address target, bool freeze) onlyOwner public {
         frozenAccount[target] = freeze;
-        FrozenFunds(target, freeze);
+        emit FrozenFunds(target, freeze);
     }
 
     /// @notice Allow users to buy tokens for `newBuyPrice` eth and sell tokens for `newSellPrice` eth
@@ -259,7 +259,7 @@ contract MyAdvancedToken is owned, TokenERC20 {
     /// @notice Sell `amount` tokens to contract
     /// @param amount amount of tokens to be sold
     function sell(uint256 amount) public {
-        require(this.balance >= amount * sellPrice);
+        require(address(this).balance >= amount * sellPrice);
         // checks if the contract has enough ether to buy
         _transfer(msg.sender, this, amount);
         // makes the transfers
