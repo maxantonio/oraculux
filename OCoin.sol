@@ -1,6 +1,23 @@
 pragma solidity ^0.4.18;
 
-contract MyContract {
+contract owned {
+    address public owner;
+
+    function owned() public {
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner {
+        require(msg.sender == owner);
+        _;
+    }
+
+    function transferOwnership(address newOwner) onlyOwner public {
+        owner = newOwner;
+    }
+}
+
+contract MyContract is owned {
     string public name = "Demox Token";
     string public symbol = "DXT";
     uint8 public decimals = 2;

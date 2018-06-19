@@ -28,6 +28,11 @@ type SocketInfo struct {
 	Block int `json:"block"`
 }
 
+type ClientInfo struct {
+	Action string      `json:"action"`
+	Data   interface{} `json:"data"`
+}
+
 //objeto de una conexion con las api
 type Server struct{
 	ws   *websocket.Conn
@@ -89,12 +94,12 @@ func (h *Hub) readSelfInfo() {
 				h.fullInfo.Sincing = syncing
 				if (syncing.IsSyncing) {
 					self_block = syncing.CurrentBlock
-					self_block = h.fullInfo.BlockNumber + 2;
-					fmt.Println(self_block)
+					//self_block = h.fullInfo.BlockNumber + 2;
+					//fmt.Println(self_block)
 				} else {
 					self_block, err = rpc.EthBlockNumber()
-					self_block = h.fullInfo.BlockNumber + 2; //para uso local cuando no este online
-					fmt.Println(self_block)
+					//self_block = h.fullInfo.BlockNumber + 2; //para uso local cuando no este online
+					//fmt.Println(self_block)
 				}
 				if (self_block >= h.fullInfo.BlockNumber) {
 					h.fullInfo.BlockNumber = self_block
@@ -157,12 +162,28 @@ func (c *Client) writeServers(){
 	for {
 		select {
 		case message := <-c.sendServer:
-			fmt.Println("RECIBIDA INFO A ENVIAR")
+			//fmt.Println("RECIBIDA INFO A ENVIAR")
 			c.ws.WriteJSON(message)
 		}
 	}
 }
+func (c *Client) readClient() {
 
+	for {
+		_, message, err := c.ws.ReadMessage()
+		fmt.Println("mensaje recibido de UN CLIENTE OH!!!")
+		data := &ClientInfo{}
+		fmt.Println("tratando de desparsear")
+		err2 := json.Unmarshal(message, data)
+		fmt.Println(data)
+		fmt.Println("SALIO ?")
+		if err != nil || err2 != nil {
+			hub.removeClient <- c
+			c.ws.Close()
+			break
+		}
+	}
+}
 //envia la informacion resumida entre todos
 func (h *Hub) sendFullInfo(data *comon.ServerInfo) {
 	if (data.BlockNumber > hub.fullInfo.BlockNumber) {
@@ -230,6 +251,7 @@ func wsIndex(res http.ResponseWriter, req *http.Request){
 	}
 
 	hub.addClient <- client
+	go client.readClient()
 	go client.writeServers() //mostrando info servidores conectados
 }
 

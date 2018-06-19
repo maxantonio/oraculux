@@ -42,19 +42,19 @@ class App extends Component {
             hash_rate:0,
             peers: 0,
             propagation: {Block: 0, Date: new Date()},
-
+            account: "",
             servers: []
         };
 
          this.last_Block();
         // let urlbase = "ws://" + document.location.host + "/ws";
         let urlbase = "ws://localhost:8080/ws";// para desarrollo
-        let ws = new WebSocket(urlbase);
+        this.ws = new WebSocket(urlbase);
         let self = this;
-        ws.onerror = function (error) {
+        this.ws.onerror = function (error) {
 
         };
-        ws.onmessage = function(event) {
+        this.ws.onmessage = function (event) {
             let response = JSON.parse(event.data);
             switch(response.info_type){
                 case "Syncing":
@@ -73,9 +73,17 @@ class App extends Component {
                     break;
             }
         }
-        ws.onclose = this.closeF;
+        this.ws.onclose = this.closeF;
     }
 
+    onTodoChange(value) {
+        this.setState({account: value});
+    }
+
+    getAccountBalance() {
+        console.log("ACOUNT BALANCE");
+        this.ws.send({"acction": "get_balance", "account": this.state.account});
+    }
     addPropagationServer = function (name, prop) {
         this.histogranProp.push(prop);
         var propagation = this.histogranProp;
@@ -252,7 +260,7 @@ class App extends Component {
         }
     }
 
-    //agregando valores alos graficos
+    //agregando valores a los graficos
     addTime(time,block){
 //cambio
         var nuevo = {name: block, cont: time, fill: this.getTimeFill(time)};
@@ -305,6 +313,10 @@ class App extends Component {
         }
         // this.transactions = count;
     }
+
+    //interactuando con el cliente
+
+
 
     last_Block() {
         setInterval(() => {
@@ -508,9 +520,14 @@ class App extends Component {
                     </div>
                 </div>
                 <div className="row">
+                    <input type="text" value={this.state.account} onChange={e => this.onTodoChange(e.target.value)}/>
+                    <input type="button" value="GET SALDO" onClick={e => this.getAccountBalance()}/>
+                </div>
+                <div className="row">
                     <Servers servers={this.state.servers} propagation={this.state.propagation}
                              handlePropagation={this.addPropagationServer.bind(this)}/>
                 </div>
+
             </div>
 
         );

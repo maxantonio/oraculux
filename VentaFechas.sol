@@ -5,7 +5,24 @@ interface IMyContract {
     function transfer(address to, uint256 amount) external returns (bool);//
 }
 
-contract DXTSale {
+contract owned {
+    address public owner;
+
+    function owned() public {
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner {
+        require(msg.sender == owner);
+        _;
+    }
+
+    function transferOwnership(address newOwner) onlyOwner public {
+        owner = newOwner;
+    }
+}
+
+contract DXTSale is owned {
     IMyContract public tokenContract;  // direccion del token a venderse
     uint256 public price;              // el precio inicial
     uint256 public price1;              // precio despues de la primera fecha
@@ -39,7 +56,7 @@ contract DXTSale {
         //tiempo mes 3 deberia ser 92
     }
 
-    function setMeses(uint timesTamp1, uint timesTamp2, uint timesTamp3){
+    function setMeses(uint timesTamp1, uint timesTamp2, uint timesTamp3) onlyOwner public {
         MES1 = timesTamp1;
         MES2 = timesTamp2;
         MES3 = timesTamp3;
@@ -68,7 +85,7 @@ contract DXTSale {
         }
     }
 
-    function getPrice() public returns (uint256 precio){
+    function getPrice() constant returns (uint256 precio){
         precio = price;
         if (now > MES1) {
             precio = price1;
@@ -79,6 +96,7 @@ contract DXTSale {
         if (now > MES3) {
             precio = price3;
         }
+        return precio;
     }
 
     function buyTokens() public payable {
@@ -101,10 +119,8 @@ contract DXTSale {
     uint constant DIA_SEG = 86400;
     uint constant ANO_SEG = 31536000;
     uint constant ANO_BIS_SEG = 31622400;
-
     uint constant HORA_SEG = 3600;
     uint constant MIN_SEG = 60;
-
 
     uint16 constant PRIMER_ANO = 1970;
 
