@@ -82,7 +82,8 @@ class App extends Component {
 
     getAccountBalance() {
         console.log("ACOUNT BALANCE");
-        this.ws.send({"acction": "get_balance", "account": this.state.account});
+
+        this.ws.send(JSON.stringify({"action": "get_balance", "data": {"account": this.state.account}}));
     }
     addPropagationServer = function (name, prop) {
         this.histogranProp.push(prop);

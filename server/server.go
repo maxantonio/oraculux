@@ -10,8 +10,10 @@ import (
 	//"github.com/Pallinder/go-randomdata"
 	"encoding/json"
 	"flag"
+
 )
 import "../comon"
+import s "strings"
 var dummy = false
 
 var upgrader = websocket.Upgrader{
@@ -29,8 +31,8 @@ type SocketInfo struct {
 }
 
 type ClientInfo struct {
-	Action string      `json:"action"`
-	Data   interface{} `json:"data"`
+	Action string            `json:"action"`
+	Data   map[string]string `json:"data"`
 }
 
 //objeto de una conexion con las api
@@ -167,20 +169,47 @@ func (c *Client) writeServers(){
 		}
 	}
 }
-func (c *Client) readClient() {
+func wsIndex(res http.ResponseWriter, req *http.Request) {
+	conn, _ := upgrader.Upgrade(res, req, nil)
 
+	client := &Client{
+		ws:         conn,
+		sendServer: make(chan SocketInfo),
+		subs:       []string{},
+	}
+	fmt.Println("ABRIENDO WEBSOCKET")
+	hub.addClient <- client
+	go client.readClient()
+	go client.writeServers() //mostrando info servidores conectados
+}
+
+//encargado de procesar las peticiones por socket del cliente
+func (c *Client) readClient() {
 	for {
 		_, message, err := c.ws.ReadMessage()
-		fmt.Println("mensaje recibido de UN CLIENTE OH!!!")
 		data := &ClientInfo{}
 		fmt.Println("tratando de desparsear")
 		err2 := json.Unmarshal(message, data)
 		fmt.Println(data)
 		fmt.Println("SALIO ?")
+		fmt.Println(data.Data["account"])
 		if err != nil || err2 != nil {
+			fmt.Println("NOP NO SALIO, DIO ERROR")
+			fmt.Println(err)
+			fmt.Println(err2)
+			fmt.Println(string(message))
 			hub.removeClient <- c
 			c.ws.Close()
 			break
+		} else {
+			fmt.Println("NO DIO ERROR")
+			rpc := ethrpc.New(*selfserver)
+			balance, err3 := rpc.EthGetBalance(data.Data["account"], "latest")
+			if err3 != nil {
+
+			}
+			fmt.Println(balance)
+			fmt.Println(err3)
 		}
 	}
 }
@@ -241,19 +270,7 @@ func (s *Server) read() {
 }
 
 //handler de las peticiones web (renderizado de la pagina
-func wsIndex(res http.ResponseWriter, req *http.Request){
-	conn, _ := upgrader.Upgrade(res, req, nil)
 
-	client := &Client{
-		ws:         conn,
-		sendServer: make(chan SocketInfo),
-		subs:       []string{},
-	}
-
-	hub.addClient <- client
-	go client.readClient()
-	go client.writeServers() //mostrando info servidores conectados
-}
 
 //handler de las peticiones sockets de los servidores api
 func wsApi(res http.ResponseWriter, req *http.Request){
@@ -270,14 +287,37 @@ func wsApi(res http.ResponseWriter, req *http.Request){
 }
 
 //handler de las peticiones sockets de los clientes web
+func wsApic(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", 405)
+		return
+	}
+	urlfile := "../client/build" + r.URL.Path
+	fmt.Println("procesando bien la url", urlfile)
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	data, _ := json.Marshal(r.URL.Query().Get(":id"))
+	fmt.Println(data)
+	fmt.Println(r.URL.Path)
+	w.Write(data)
+	return
+}
+//handler de las peticiones sockets de los clientes web
 func serveHome(w http.ResponseWriter, r *http.Request) {
+
 		if r.Method != "GET" {
 			http.Error(w, "Method not allowed", 405)
 			return
 		}
+	if s.Contains(r.URL.Path, "apic") {
+		fmt.Println("revisado por home pero obviado")
+		wsApic(w, r)
+		return
+	}
 		urlfile := "../client/build"+r.URL.Path
 		fmt.Println("retorna fichero",urlfile)
-		http.ServeFile(w, r, urlfile)
+
+	http.ServeFile(w, r, urlfile)
 	}
 
 // fariables que se pueden recibir por parametros
@@ -285,23 +325,29 @@ var mode = flag.String("mode", "merge", "modo del servidor(self,soloapi,merge[de
 //
 var selfserver = flag.String("selfserver", "http://127.0.0.1:8545", "direccion servidor rpc de la info propia del stat")
 
-func main() {
-	flag.Parse()
-
-	go hub.start()
-	//manejando laspeticiones web http
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		serveHome(w, r)
-	})
-	//manejando las peticiones por websockets de los clientes web
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		wsIndex(w, r)
-	})
-
-	//manejando las peticiones por websockets de los servidores API (LISTADO)
-	http.HandleFunc("/api", func(w http.ResponseWriter, r *http.Request) {
-		wsApi(w, r)
-	})
-	//iniciando el servidor por el puerto
-	http.ListenAndServe(":8080", nil)
-}
+//func main() {
+//	flag.Parse()
+//
+//	go hub.start()
+//	//manejando las peticiones por websockets de los servidores API (LISTADO)
+//
+//	//manejando laspeticiones web http
+//
+//	//manejando las peticiones por websockets de los clientes web
+//	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+//		wsIndex(w, r)
+//	})
+//
+//	//manejando las peticiones por websockets de los servidores API (LISTADO)
+//	http.HandleFunc("/api", func(w http.ResponseWriter, r *http.Request) {
+//		wsApi(w, r)
+//	})
+//	http.HandleFunc("/apic/{method}/{id}", func(w http.ResponseWriter, r *http.Request) {
+//		wsApic(w, r)
+//	})
+//	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+//		serveHome(w, r)
+//	})
+//	//iniciando el servidor por el puerto
+//	http.ListenAndServe(":8080", nil)
+//}
