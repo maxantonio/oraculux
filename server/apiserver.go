@@ -28,12 +28,37 @@ func main() {
 	router.HandleFunc("/css/bootstrap.min.css", serveHome2)
 	router.HandleFunc("/css/font-awesome.min.css", serveHome2)
 	router.HandleFunc("/d3.v3.min.js", serveHome2)
-	router.HandleFunc("/static/css/main.fa8e7bf9.css", serveHome2)
-	router.HandleFunc("/static/js/main.1d47eba2.js", serveHome2)
+	router.HandleFunc("/static/css/{css}", serveCss)
+	router.HandleFunc("/static/js/{script}", serveScript)
 	router.HandleFunc("/fonts/{font}", serveFont)
 	log.Fatal(http.ListenAndServe(":80", router))
 }
+func serveCss(w http.ResponseWriter, r *http.Request) {
 
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", 405)
+		return
+	}
+	vars := mux.Vars(r)
+	css := vars["css"]
+	urlfile := "../client/build/css/" + css
+	fmt.Println("retorna fichero", urlfile)
+
+	http.ServeFile(w, r, urlfile)
+}
+func serveScript(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", 405)
+		return
+	}
+	vars := mux.Vars(r)
+	fuente := vars["script"]
+	urlfile := "../client/build/static/" + fuente
+	fmt.Println("retorna fichero", urlfile)
+
+	http.ServeFile(w, r, urlfile)
+}
 func serveFont(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != "GET" {
