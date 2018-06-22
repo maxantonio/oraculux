@@ -82,9 +82,10 @@ func Balance(w http.ResponseWriter, r *http.Request) {
 	rpc := ethrpc.New(*selfserver)
 	balance, err3 := rpc.EthGetBalance(account, "latest")
 	if err3 != nil {
-		fmt.Fprintln(w, "Todo show:", balance)
-	} else {
 		fmt.Fprintln(w, "ERROR BUSCANDO:", err3)
+	} else {
+		fmt.Fprintln(w, "Todo show:", balance)
+
 	}
 
 }
