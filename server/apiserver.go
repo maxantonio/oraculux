@@ -53,8 +53,8 @@ func serveScript(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	vars := mux.Vars(r)
-	fuente := vars["script"]
-	urlfile := "../client/build/static/" + fuente
+	script := vars["script"]
+	urlfile := "../client/build/static/js/" + script
 	fmt.Println("retorna fichero", urlfile)
 
 	http.ServeFile(w, r, urlfile)
