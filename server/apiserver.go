@@ -41,7 +41,7 @@ func serveCss(w http.ResponseWriter, r *http.Request) {
 	}
 	vars := mux.Vars(r)
 	css := vars["css"]
-	urlfile := "../client/build/css/" + css
+	urlfile := "../client/build/static/css/" + css
 	fmt.Println("retorna fichero", urlfile)
 
 	http.ServeFile(w, r, urlfile)
