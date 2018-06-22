@@ -64,6 +64,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 }
 
 func TodoIndex(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("RESPONDIENDO index")
 	fmt.Fprintln(w, "Todo Index!")
 }
 
@@ -75,6 +76,7 @@ func TodoShow(w http.ResponseWriter, r *http.Request) {
 
 //METODOS DE LA API QUE INTERACTUAN CON ETH
 func Balance(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("tratando de obtener balance")
 	vars := mux.Vars(r)
 	account := vars["account"]
 	rpc := ethrpc.New(*selfserver)
