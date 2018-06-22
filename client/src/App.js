@@ -47,8 +47,8 @@ class App extends Component {
         };
 
          this.last_Block();
-        // let urlbase = "ws://" + document.location.host + "/ws";
-        let urlbase = "ws://localhost:8080/ws";// para desarrollo
+        let urlbase = "ws://" + document.location.host + "/ws";
+        // let urlbase = "ws://localhost:8080/ws";// para desarrollo
         this.ws = new WebSocket(urlbase);
         let self = this;
         this.ws.onerror = function (error) {

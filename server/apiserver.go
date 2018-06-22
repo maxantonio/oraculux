@@ -31,7 +31,7 @@ func main() {
 	router.HandleFunc("/static/css/main.fa8e7bf9.css", serveHome2)
 	router.HandleFunc("/static/js/main.1d47eba2.js", serveHome2)
 	router.HandleFunc("/fonts/{font}", serveFont)
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe(":80", router))
 }
 
 func serveFont(w http.ResponseWriter, r *http.Request) {
